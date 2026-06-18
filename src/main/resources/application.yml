@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/myportfolio
+    username: sampat
+    password: "Sam#01mis"
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+  
+  profiles:
+    active: dev
+
+server:
+  port: 8081
