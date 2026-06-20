@@ -1,5 +1,9 @@
 package com.stocks.myportfolio.dto.request;
 
-public class StockSearchRequest {
-    
+import com.stocks.myportfolio.common.enums.Exchange;
+
+public record StockSearchRequest(
+        String query,
+        Exchange exchange,
+        String sector) {
 }

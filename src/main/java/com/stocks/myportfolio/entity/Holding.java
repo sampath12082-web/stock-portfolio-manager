@@ -16,10 +16,13 @@ public class Holding extends BaseEntity {
     @JoinColumn(name = "stock_id")
     private Stock stock;
 
-    private BigDecimal quantity;
+    @Column(nullable = false)
+    private Integer quantity;
 
+    @Column(nullable = false)
     private BigDecimal averageBuyPrice;
 
+    @Column(nullable = false)
     private BigDecimal investedAmount;
 
     public Holding() {
@@ -37,11 +40,11 @@ public class Holding extends BaseEntity {
         this.stock = stock;
     }
 
-    public BigDecimal getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(BigDecimal quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 

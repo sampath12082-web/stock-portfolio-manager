@@ -11,8 +11,10 @@ public class Stock extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String symbol;
 
+    @Column(nullable = false)
     private String companyName;
 
     @Enumerated(EnumType.STRING)

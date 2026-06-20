@@ -7,6 +7,11 @@ public record HoldingResponse(
         String symbol,
         Integer quantity,
         BigDecimal averageBuyPrice,
-        BigDecimal investedAmount
-) {
+        BigDecimal investedAmount,
+        BigDecimal currentPrice,
+        BigDecimal currentValue,
+        BigDecimal pnl,
+        BigDecimal pnlPercentage,
+        BigDecimal dayChange,
+        BigDecimal dayChangePercentage) {
 }

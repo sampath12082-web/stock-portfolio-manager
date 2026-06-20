@@ -3,7 +3,7 @@ CREATE TABLE holding (
 
     stock_id BIGINT NOT NULL,
 
-    quantity NUMERIC(20,4) NOT NULL,
+    quantity Integer NOT NULL,
 
     average_buy_price NUMERIC(20,4) NOT NULL,
 

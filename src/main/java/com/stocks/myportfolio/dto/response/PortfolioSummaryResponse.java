@@ -1,5 +1,13 @@
 package com.stocks.myportfolio.dto.response;
 
-public class PortfolioSummaryResponse {
-    
+import java.math.BigDecimal;
+
+public record PortfolioSummaryResponse(
+        long totalHoldings,
+        BigDecimal totalInvestment,
+        BigDecimal currentValue,
+        BigDecimal totalPnL,
+        BigDecimal totalPnLPercentage,
+        BigDecimal dayPnL,
+        BigDecimal dayPnLPercentage) {
 }

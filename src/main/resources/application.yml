@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/myportfolio
-    username: sampat
-    password: "Sam#01mis"
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:myportfolio}
+    username: ${DB_USER:sampat}
+    password: ${DB_PASSWORD:}
 
   jpa:
     hibernate:
@@ -14,5 +14,18 @@ spring:
   profiles:
     active: dev
 
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 server:
   port: 8081
+
+groww:
+  api:
+    base-url: https://api.groww.in
+    access-token: ${GROWW_ACCESS_TOKEN:}
+    api-secret: ${GROWW_API_SECRET:}
+    api-version: "1.0"
+    enabled: ${GROWW_API_ENABLED:false}
