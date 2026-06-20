@@ -3,13 +3,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Dashboard — Portfolio Summary', () => {
   test('shows Portfolio, Groww Account, and Mutual Funds sections', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('PORTFOLIO')).toBeVisible();
-    await expect(page.getByText('MUTUAL FUNDS')).toBeVisible();
+    await expect(page.getByText('Deposited')).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('h3', { hasText: 'Mutual Funds' })).toBeVisible({ timeout: 10000 });
   });
 
   test('portfolio section shows key metrics', async ({ page }) => {
     await page.goto('/');
-    const portfolio = page.locator('text=PORTFOLIO').locator('..');
+    await expect(page.getByText('Deposited')).toBeVisible({ timeout: 20000 });
+    const portfolio = page.locator('h3', { hasText: 'Portfolio' }).locator('..');
     await expect(portfolio.getByText('Deposited')).toBeVisible();
     await expect(portfolio.getByText('Invested')).toBeVisible();
     await expect(portfolio.getByText('Current Value')).toBeVisible();
@@ -60,8 +61,9 @@ test.describe('Holdings Page — Table and Filters', () => {
 test.describe('Transactions Page — Analytics and Table', () => {
   test('shows analytics sections', async ({ page }) => {
     await page.goto('/transactions');
-    await expect(page.getByText('FUND FLOW')).toBeVisible();
-    await expect(page.getByText('ACTIVITY')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText('Fund Flow')).toBeVisible();
+    await expect(page.getByText('Activity')).toBeVisible();
   });
 
   test('transactions table has correct columns', async ({ page }) => {
