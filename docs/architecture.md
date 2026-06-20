@@ -50,8 +50,8 @@ stock-portfolio-manager/
 ├── e2e/                  # Playwright tests
 │   └── tests/            # smoke, functional, regression
 ├── scripts/              # Data import scripts (Python)
-├── docs/                 # Documentation
-└── CLAUDE.md, HANDOFF.md, BUGS.md, ENHANCEMENTS.md
+├── docs/                 # Documentation + tracking (HANDOFF, BUGS, ENHANCEMENTS)
+└── CLAUDE.md
 ```
 
 ## Backend Layered Architecture

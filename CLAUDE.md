@@ -59,7 +59,7 @@ stock-portfolio-manager/
 │   └── tests/
 ├── scripts/              # Python data import scripts
 ├── docs/                 # Architecture, API reference, features
-└── CLAUDE.md, HANDOFF.md, BUGS.md, ENHANCEMENTS.md
+└── CLAUDE.md
 ```
 
 ## Architecture
@@ -122,7 +122,7 @@ React 19 + Vite + Tailwind CSS (light theme) in `frontend/`.
 
 ## Session Continuity
 
-- **`HANDOFF.md`** — Read first when resuming. Current state, pending work, data sources.
-- **`ENHANCEMENTS.md`** — Feature requests with status tracking.
-- **`BUGS.md`** — Bug tracking with root cause analysis.
+- **`docs/HANDOFF.md`** — Read first when resuming. Current state, pending work, data sources.
+- **`docs/ENHANCEMENTS.md`** — Feature requests with status tracking.
+- **`docs/BUGS.md`** — Bug tracking with root cause analysis.
 - **`GROWW_Reports_06192026/`** — Groww export files (gitignored, personal data).
