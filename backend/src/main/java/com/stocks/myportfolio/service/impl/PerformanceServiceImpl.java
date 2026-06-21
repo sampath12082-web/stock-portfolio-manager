@@ -65,9 +65,8 @@ public class PerformanceServiceImpl implements PerformanceService {
     public PortfolioSnapshotResponse captureSnapshot() {
         LocalDate today = LocalDate.now();
 
-        return snapshotRepository.findBySnapshotDate(today)
-                .map(this::toResponse)
-                .orElseGet(() -> toResponse(createSnapshot(today)));
+        snapshotRepository.findBySnapshotDate(today).ifPresent(snapshotRepository::delete);
+        return toResponse(createSnapshot(today));
     }
 
     private PortfolioSnapshot createSnapshot(LocalDate date) {
