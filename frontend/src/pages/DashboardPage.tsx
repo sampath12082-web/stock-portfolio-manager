@@ -103,6 +103,7 @@ export default function DashboardPage() {
   const mfPnL = mfCurrent - mfInvested;
   const mfPnLPct = mfInvested > 0 ? (mfPnL / mfInvested) * 100 : 0;
 
+  const growwAvailable = g != null;
   const clearCash = g?.clearCash ?? null;
   const cashBalance = clearCash;
   const realizedPnL = (d && clearCash != null) ? (d.investedAmount + clearCash) - d.totalDeposited : null;
@@ -119,16 +120,16 @@ export default function DashboardPage() {
             <div className="flex justify-between text-sm"><span className="text-gray-500">Deposited</span><span className="font-semibold text-gray-900">{formatCurrency(d?.totalDeposited)}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(d?.investedAmount)}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(d?.currentValue)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Cash Balance</span><span className="font-semibold text-gray-900">{cashBalance != null ? formatCurrency(cashBalance) : '—'}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Cash Balance</span><span className="font-semibold text-gray-900">{cashBalance != null ? formatCurrency(cashBalance) : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
             <div className="border-t border-gray-100 my-1" />
             <div className="flex justify-between text-sm"><span className="text-gray-500">Unrealized P&L</span><span className="font-semibold"><PnLText value={d?.unrealizedPnL} format={formatCurrency} />{d?.unrealizedPnLPercentage != null && <span className="text-xs ml-1">(<PnLText value={d.unrealizedPnLPercentage} format={formatPercentage} />)</span>}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Realized P&L</span><span className="font-semibold">{realizedPnL != null ? <PnLText value={realizedPnL} format={formatCurrency} /> : '—'}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Total P&L</span><span className="font-semibold">{totalPnL != null ? <PnLText value={totalPnL} format={formatCurrency} /> : '—'}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Realized P&L</span><span className="font-semibold">{realizedPnL != null ? <PnLText value={realizedPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Total P&L</span><span className="font-semibold">{totalPnL != null ? <PnLText value={totalPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-500">Day Change</span><span className="font-semibold"><PnLText value={s?.dayPnL} format={formatCurrency} />{s?.dayPnLPercentage != null && <span className="text-xs ml-1">(<PnLText value={s.dayPnLPercentage} format={formatPercentage} />)</span>}</span></div>
           </div>
         </div>
 
-        {g && (
+        {g ? (
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Groww Account</h3>
             <div className="space-y-1.5">
@@ -149,6 +150,15 @@ export default function DashboardPage() {
                 <span className="text-gray-500">Segments</span>
                 <div className="flex gap-1">{g.activeSegments.map((seg) => <Badge key={seg} variant="blue">{seg}</Badge>)}</div>
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Groww Account</h3>
+            <div className="flex flex-col items-center justify-center py-6 text-gray-400">
+              <p className="text-sm">Groww API offline</p>
+              <p className="text-xs mt-1">Renew API key at groww.in/trade-api</p>
+              <p className="text-xs mt-1">Cash Balance, Realized P&L unavailable</p>
             </div>
           </div>
         )}
