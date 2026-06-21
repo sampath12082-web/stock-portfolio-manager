@@ -40,8 +40,19 @@ public class AuthServiceImpl implements AuthService {
         this.emailService = emailService;
     }
 
+    private static final java.util.regex.Pattern PASSWORD_PATTERN =
+            java.util.regex.Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]{16,20}$");
+
+    private void validatePassword(String password) {
+        if (password == null || !PASSWORD_PATTERN.matcher(password).matches()) {
+            throw new ValidationException(
+                    "Password must be 16-20 characters with at least 1 uppercase, 1 lowercase, 1 digit, and 1 special character (!@#$%^&*)");
+        }
+    }
+
     @Override
     public UserResponse register(RegisterRequest request) {
+        validatePassword(request.password());
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("Email already registered: " + request.email());
         }
@@ -68,6 +79,10 @@ public class AuthServiceImpl implements AuthService {
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             throw new ValidationException("Invalid email or password");
+        }
+
+        if (!user.isEmailVerified()) {
+            throw new ValidationException("Email not verified. Please check your inbox for the OTP.");
         }
 
         if (!"ACTIVE".equals(user.getStatus())) {
@@ -114,6 +129,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmail(request.email().toLowerCase().trim())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        validatePassword(request.newPassword());
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
     }
@@ -127,6 +143,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ValidationException("Current password is incorrect");
         }
 
+        validatePassword(request.newPassword());
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
     }

@@ -81,14 +81,14 @@ test.describe('Auth — Login Flow', () => {
 test.describe('Auth — Registration', () => {
   test('register with duplicate email returns 409', async ({ request }) => {
     const resp = await request.post('/api/auth/register', {
-      data: { email: ADMIN_EMAIL, password: 'Test@123', firstName: 'Test' },
+      data: { email: ADMIN_EMAIL, password: 'TestPassword@1234', firstName: 'Test' },
     });
     expect(resp.status()).toBe(409);
   });
 
   test('register with invalid email returns 400', async ({ request }) => {
     const resp = await request.post('/api/auth/register', {
-      data: { email: 'not-an-email', password: 'Test@123', firstName: 'Test' },
+      data: { email: 'not-an-email', password: 'TestPassword@1234', firstName: 'Test' },
     });
     expect(resp.status()).toBe(400);
   });

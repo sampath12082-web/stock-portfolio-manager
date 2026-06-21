@@ -1,7 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, ArrowLeftRight, Database, PieChart, TrendingUp, X,
+  LayoutDashboard, Briefcase, ArrowLeftRight, Database, PieChart, TrendingUp, Shield, X,
 } from 'lucide-react';
+import { useAuth } from '@/auth/AuthContext';
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -12,12 +13,18 @@ const links = [
   { to: '/performance', label: 'Performance', icon: TrendingUp },
 ];
 
+const adminLinks = [
+  { to: '/admin/users', label: 'Admin Panel', icon: Shield },
+];
+
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
 }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
+  const { isAdmin } = useAuth();
+
   return (
     <>
       {open && (
@@ -54,6 +61,28 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
               {label}
             </NavLink>
           ))}
+          {isAdmin && (
+            <>
+              <div className="border-t border-gray-100 my-2" />
+              {adminLinks.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                      isActive
+                        ? 'bg-purple-50 text-purple-600 font-medium'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`
+                  }
+                >
+                  <Icon size={18} />
+                  {label}
+                </NavLink>
+              ))}
+            </>
+          )}
         </nav>
       </aside>
     </>

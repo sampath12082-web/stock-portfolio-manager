@@ -4,7 +4,7 @@
 
 | # | Severity | Bug | Root Cause | Status |
 |---|----------|-----|-----------|--------|
-| 21 | High | Admin panel not accessible — no sidebar link, no `/admin` route for ROLE_ADMIN users | Frontend missing: AdminUsersPage, sidebar admin link (conditional on ROLE_ADMIN), App.tsx route `/admin/users` wrapped in AdminGuard | Open |
+None — all bugs resolved.
 
 ## Resolved Bugs
 
@@ -30,3 +30,4 @@
 | 18 | Medium | Cash balance mixes intraday/delivery flows | Fixed — formula uses actual delivery buy/sell flows + intraday net P&L | 2026-06-20 |
 | 19 | Medium | No tradeType in data model | Fixed — added TradeType enum (CNC/MIS/UNKNOWN), V14 migration, import auto-detection | 2026-06-20 |
 | 20 | Medium | Sector allocation empty — all stocks have sector=null | Fixed — added POST /api/stocks/refresh-sectors endpoint, filtered allocation to active holdings | 2026-06-20 |
+| 21 | High | Admin panel not accessible for admin login | Fixed — added AdminUsersPage, sidebar link (conditional ROLE_ADMIN), /admin/users route | 2026-06-21 |
