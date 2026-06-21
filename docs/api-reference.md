@@ -2,6 +2,40 @@
 
 Base URL: `http://localhost:8081`
 
+## Authentication
+
+All `/api/*` endpoints require JWT authentication (except `/api/auth/*`).
+Pass token as: `Authorization: Bearer <accessToken>`
+
+## Auth APIs (Public)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register with email + password + name → sends OTP |
+| POST | `/api/auth/verify-otp` | Verify email OTP (6-digit, 10-min expiry) |
+| POST | `/api/auth/login` | Login → JWT access token (15min) + refresh token (7d) |
+| POST | `/api/auth/forgot-password` | Send password reset OTP to email |
+| POST | `/api/auth/reset-password` | Verify OTP + set new password |
+| POST | `/api/auth/change-password` | Change password (requires current password) |
+| POST | `/api/auth/refresh` | Refresh access token using refresh token |
+
+## Profile APIs (Authenticated)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/profile` | Get own profile |
+| PUT | `/api/profile` | Update name, phone (email immutable) |
+
+## Admin APIs (ROLE_ADMIN only)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/users` | List all users |
+| GET | `/api/admin/users/{id}` | View user profile |
+| PUT | `/api/admin/users/{id}/status` | Activate/inactivate/suspend user |
+| POST | `/api/admin/users/{id}/reset-password` | Reset user password (returns temp password) |
+| DELETE | `/api/admin/users/{id}` | Delete user (cannot delete admin) |
+
 ## Stock APIs
 
 | Method | Endpoint | Description |

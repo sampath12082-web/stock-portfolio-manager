@@ -2,168 +2,118 @@
 
 ## Project Summary
 
-Indian stock portfolio + mutual funds tracking app. Spring Boot 3.5 / Java 21 backend + React 19 / Vite / Tailwind CSS frontend. Integrates with Groww API, Yahoo Finance, and AMFI NAV feed.
+Indian stock portfolio + mutual funds tracking app with JWT authentication. Spring Boot 3.5 / Java 21 backend + React 19 / Vite / Tailwind CSS frontend. Integrates with Groww API, Yahoo Finance, and AMFI NAV feed.
 
-## Current State (as of 2026-06-20)
+## Current State (as of 2026-06-21)
 
 ### What's Running (port 8081)
 
-V1-V14 migrations applied. 129 stocks, 567 stock transactions (469 MIS + 77 CNC + 21 fund), 15 MF funds, 12 MF holdings (Rs 7,34,440 invested), 279 MF transactions. 6 frontend pages. Groww API synced.
+V1-V18 migrations applied. JWT auth enabled. Admin user seeded. 129 stocks, 567 stock transactions (469 MIS, 77 CNC), 15 MF funds, 12 MF holdings, 279 MF transactions. 6 frontend pages. All data belongs to admin user (user_id=1).
 
-### Dashboard Summary
+### Authentication
 
-| Metric | Value |
-|--------|-------|
-| Deposited | Rs 5,30,373 |
-| Invested (stocks) | Rs 4,69,416 |
-| Current Value | Rs 4,50,213 |
-| Cash Balance | Rs 44,298 |
-| Unrealized P&L | -Rs 19,203 (-4.09%) |
-| Delivery P&L | -Rs 18,082 |
-| Intraday P&L | -Rs 4,90,941 |
-| Active Holdings | 9 |
-| MF Invested | Rs 7,34,440 |
-| MF Current | Rs 6,68,462 |
+| Item | Detail |
+|------|--------|
+| Mechanism | JWT (stateless) — access token 15min, refresh token 7 days |
+| Admin user | `sampath12082@gmail.com` / `Admin@123` (ROLE_ADMIN) |
+| Password | BCrypt hashed |
+| Protected | All `/api/*` except `/api/auth/*` |
+| Admin-only | `/api/admin/*` |
 
-### Groww API Key — Requires Daily Renewal
+### Test Results (61 tests, all passing)
 
-Requires daily re-approval at https://groww.in/trade-api/api-keys. Without it, Groww sync returns 503.
+| Suite | Tests | Status |
+|-------|-------|--------|
+| Smoke | 9 | All pass |
+| Auth | 16 | All pass |
+| Functional | 23 | All pass |
+| Regression | 13 | All pass |
+| **Total** | **61** | **All pass (1.4s)** |
+
+### Application URL
+
+- **Backend + Frontend**: http://localhost:8081
+- **API**: http://localhost:8081/api/*
+- **Login**: `POST /api/auth/login` with `{"email":"sampath12082@gmail.com","password":"Admin@123"}`
 
 ---
 
 ## Pending Work
 
-### Optional: Import pre-period buy data (data quality improvement)
+### Frontend Auth (Not Yet Implemented)
 
-45 stocks have sell transactions but no matching buy (bought before April 2026). Their delivery sells are currently **excluded** from realized P&L (skipped when cost basis = 0). To include them accurately:
-- Parse `Stocks_Capital_Gains_*.xlsx` to extract buy prices
-- Create synthetic opening-balance BUY transactions with those cost bases
-- This would make delivery P&L more complete
+The backend auth is complete but the React frontend doesn't have login/register/profile pages yet. Currently, the frontend makes unauthenticated API calls which return 401. To use the app:
+- Access via API with JWT token, OR
+- Implement frontend auth pages (Login, Register, Profile, Admin panel)
 
-### Validation pending
+### Enhancements (#22-#33) — Auth & Help Module
 
-Full 52-check validation suite needs re-run after the intraday/delivery separation fixes to confirm all numbers are consistent.
+| # | Module | Description | Status |
+|---|--------|-------------|--------|
+| 22 | Auth | User registration with email + password + name | Backend done |
+| 23 | Auth | JWT login (access + refresh tokens) | Backend done |
+| 24 | Auth | Email OTP verification on registration | Backend done |
+| 25 | Auth | Forgot password (email OTP → reset) | Backend done |
+| 26 | Auth | Change password (requires current) | Backend done |
+| 27 | Auth | Spring Security JWT filter | Backend done |
+| 28 | Profile | Profile page (view/edit name, phone; email immutable) | Backend done, frontend pending |
+| 29 | Admin | Admin user seeded on startup | Done |
+| 30 | Admin | Admin panel (list/manage users) | Backend done, frontend pending |
+| 31 | Groww | Per-user Groww credentials (encrypted) | Not started |
+| 32 | Help | FAQ page (admin-managed) | Not started |
+| 33 | Help | Support tickets (user → admin) | Not started |
 
 ---
 
 ## Resolved Work
 
-### Resolved Bugs (19) — BUGS.md
-
-| # | Bug | Date |
-|---|-----|------|
-| 1-4 | P&L zeroes/hyphens (Yahoo Finance field mapping) | 2026-06-20 |
-| 5 | Groww sync 404 (conditional controller) | 2026-06-20 |
-| 6-8 | Empty performance/signals/snapshots | 2026-06-20 |
-| 9 | Stocks local-only search | 2026-06-20 |
-| 10 | Dashboard cash balance -₹43K (added WITHDRAWAL handling) | 2026-06-20 |
-| 11 | Realized P&L incorrect (cascaded from #10) | 2026-06-20 |
-| 12 | tradeDate never set (added to CreateTransactionRequest + all code paths) | 2026-06-20 |
-| 13 | Realized P&L Rs 35.4L phantom profit — separated intraday/delivery, skipped zero-cost pre-period sells | 2026-06-20 |
-| 14 | Total P&L 664% — fixed by #13, now shows -Rs 5.3L (-99.6%) | 2026-06-20 |
-| 15 | Transaction analytics inflated ~25x — added CNC/MIS breakdown | 2026-06-20 |
-| 16 | FIFO sorted by createdAt — changed to tradeDate | 2026-06-20 |
-| 17 | Performance snapshot totalInvestment mismatch — filtered to active holdings only | 2026-06-20 |
-| 18 | Cash balance mixed intraday/delivery — fixed formula to use actual cash flows | 2026-06-20 |
-| 19 | No tradeType field — added TradeType enum (CNC/MIS/UNKNOWN), V14 migration, import detection | 2026-06-20 |
-
-### Resolved Enhancements (19) — ENHANCEMENTS.md
-
-| # | Enhancement | Date |
-|---|-------------|------|
-| 1 | Cash balance on Dashboard | 2026-06-20 |
-| 2 | Realized vs unrealized P&L | 2026-06-20 |
-| 3 | Trading signals portfolio priority | 2026-06-20 |
-| 4 | Trade date column (V10 + bug #12 fix) | 2026-06-20 |
-| 5 | Analytics at top of Transactions | 2026-06-20 |
-| 6 | Stock LTP column | 2026-06-20 |
-| 7 | Remove Symbol column from Stocks | 2026-06-20 |
-| 8 | Remove Sector column from Stocks | 2026-06-20 |
-| 9-18 | UI enhancements: compact layouts, signal filters, stock sorting, Groww order toggle, performance 7D default | 2026-06-20 |
-| 19 | Mutual Funds module — deploy + data load | 2026-06-20 |
-
-### Completed Features
-
-| Feature | Status |
-|---------|--------|
-| Stock CRUD + Yahoo Finance smart lookup | Done |
-| Holdings with live P&L + Groww portfolio sync | Done |
-| Transactions (BUY/SELL/DIVIDEND/DEPOSIT/WITHDRAWAL/CHARGES) with CNC/MIS tagging | Done |
-| Groww order sync + account details | Done |
-| Market data via Yahoo Finance | Done |
-| Technical analysis (SMA/RSI/52-week) | Done |
-| Portfolio performance snapshots (active holdings only) | Done |
-| PDF upload (trade reports + Groww ledger) | Done |
-| Dashboard with separated intraday/delivery P&L + Groww account | Done |
-| Light theme UI | Done |
-| Mutual Funds (AMFI NAV, holdings, transactions) | Done |
-
-### Completed Data Imports
-
-| Import | Records | Status |
-|--------|---------|--------|
-| Stock orders from `Stocks_Order_History_*_19-06-2026.xlsx` | 546 (469 MIS, 77 CNC) | Done |
-| Dividends from `Dividend_Report_*.pdf` | 2 (TECHNOCRAFT Rs 200, TRENT Rs 180) | Done |
-| Deposits from `Groww_Balance_Statement_*_19-06-2026.xlsx` | 12 (Rs 5,30,373 total) | Done |
-| Charges from Balance Statement | 7 (Rs 531 total) | Done |
-| MF holdings from `Mutual_Funds_*.xlsx` | 12 holdings across 12 funds | Done |
-| MF trades from `MF_Capital_Gains_2025-2026.xlsx` | 279 (140 purchases + 139 redemptions) | Done |
-| AMFI NAV refresh | 15 funds updated | Done |
-| Groww API holdings sync | 28 holdings corrected (9 active) | Done |
+### All Bugs Resolved (20) — docs/BUGS.md
+### All Prior Enhancements Resolved (#1-#21) — docs/ENHANCEMENTS.md
+### Auth Backend Complete (#22-#30 backend)
 
 ---
 
-## Import Scripts
+## Project Structure
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/import_stock_data.py` | Import stock orders with MIS/CNC detection, dividends, deposits, charges |
-| `scripts/import_mf_data.py` | Import MF holdings + capital gains trades from Groww Excel, refresh NAVs |
+```
+stock-portfolio-manager/
+├── backend/          # Spring Boot 3.5 / Java 21
+├── frontend/         # React 19 / Vite / Tailwind CSS
+├── e2e/              # Playwright tests (61 tests)
+├── scripts/          # Python data import scripts
+├── docs/             # Documentation + tracking files
+└── CLAUDE.md
+```
 
----
-
-## Groww Reports Inventory (18 files)
-
-| File | Loaded? | Target |
-|------|---------|--------|
-| Stocks_Order_History_*_19-06-2026.xlsx | **Yes** | transaction_history |
-| Dividend_Report_*.pdf | **Yes** | transaction_history |
-| Groww_Balance_Statement_*_19-06-2026.xlsx | **Yes** | transaction_history |
-| Mutual_Funds_Holdings_*.xlsx | **Yes** | mutual_fund + mf_holding |
-| MF_Capital_Gains_2025-2026.xlsx | **Yes** | mf_transaction |
-| Stocks_Capital_Gains_*.xlsx | **Not loaded** — could provide pre-period buy prices for 45 stocks | — |
-| Stocks_Holdings_Statement_*.xlsx | Skip (validation) | — |
-| MF_Order_History 2025/2026 | Skip (empty) | — |
-| MF_Capital_Gains_2026-2027 | Skip (summary only) | — |
-| MF_ELSS_Statements (x2) | Skip (tax ref) | — |
-| F&O/Commodities/FnO_Tax | Skip (out of scope) | — |
-| Demat_Report | Skip (account ref) | — |
-
----
-
-## Environment
+## Environment Variables
 
 ```powershell
 $env:DB_PASSWORD = "<postgres-password>"
 $env:GROWW_API_ENABLED = "true"
-$env:GROWW_ACCESS_TOKEN = "<groww-api-key>"  # Needs daily renewal
+$env:GROWW_ACCESS_TOKEN = "<groww-api-key>"
 $env:GROWW_API_SECRET = "<groww-secret>"
+$env:JWT_SECRET = "<base64-encoded-secret>"
+$env:ADMIN_DEFAULT_PASSWORD = "Admin@123"
+$env:SPRING_MAIL_HOST = "smtp.gmail.com"
+$env:SPRING_MAIL_USERNAME = "<email>"
+$env:SPRING_MAIL_PASSWORD = "<app-password>"
 ```
 
-## Flyway Migrations (V1–V14)
+## Flyway Migrations (V1–V18)
 
 | V | Purpose | Applied? |
 |---|---------|----------|
-| V1-V10 | Stock tables, signals, fund txns, trade_date | Yes |
-| V11 | mutual_fund table | Yes |
-| V12 | mf_holding table | Yes |
-| V13 | mf_transaction table | Yes |
-| V14 | trade_type column (CNC/MIS/UNKNOWN) | Yes |
+| V1-V14 | Stock tables, signals, MF, trade_type | Yes |
+| V15 | users table | Yes |
+| V16 | otp_tokens table | Yes |
+| V17 | Add user_id FK to all domain tables | Yes |
+| V18 | Assign existing data to admin user | Yes |
 
 ## Key Files
 
-- [CLAUDE.md](CLAUDE.md) — Architecture reference
-- [ENHANCEMENTS.md](ENHANCEMENTS.md) — 0 open + 19 resolved
-- [BUGS.md](BUGS.md) — 0 open + 19 resolved
-- [GROWW_Reports_06192026/](GROWW_Reports_06192026/) — 18 report files (5 loaded, 13 skipped)
-- [scripts/](scripts/) — Import scripts + build/deploy scripts
+- [CLAUDE.md](../CLAUDE.md) — Architecture reference
+- [docs/ENHANCEMENTS.md](ENHANCEMENTS.md) — 12 open (#22-#33) + 21 resolved
+- [docs/BUGS.md](BUGS.md) — 0 open + 20 resolved
+- [docs/api-reference.md](api-reference.md) — Complete API reference with auth endpoints
+- [docs/features.md](features.md) — Feature documentation with auth section
+- [docs/architecture.md](architecture.md) — System architecture with security flow

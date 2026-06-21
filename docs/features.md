@@ -1,5 +1,33 @@
 # Feature Documentation
 
+## Authentication & Security
+
+### Login & Registration
+- Email-based registration with mandatory email verification (6-digit OTP, 10-min expiry)
+- JWT stateless authentication: access token (15min) + refresh token (7 days)
+- BCrypt password hashing
+- Forgot password flow: email → OTP → reset
+- Change password (requires current password)
+
+### Roles & Access Control
+- `ROLE_USER` — access own portfolio data
+- `ROLE_ADMIN` — manage all users, reset passwords, activate/deactivate/delete users
+- All `/api/*` endpoints protected (except `/api/auth/*`)
+- Admin endpoints at `/api/admin/*` restricted to ROLE_ADMIN
+
+### Admin User
+- Seeded on first startup: `sampath12082@gmail.com` (ROLE_ADMIN)
+- Default password: `Admin@123` (configurable via `ADMIN_DEFAULT_PASSWORD` env var)
+- All existing portfolio data assigned to admin user
+
+### Profile Management
+- View/edit: first name, last name, phone
+- Email is immutable and unique — used as login identifier
+
+### Multi-Tenancy
+- `user_id` foreign key on all domain tables (stock, holding, transaction, etc.)
+- Each user sees only their own data
+
 ## Pages
 
 ### 1. Dashboard (`/`)

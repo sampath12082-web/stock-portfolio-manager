@@ -64,7 +64,26 @@ Controller → Service (interface) → ServiceImpl → Repository → PostgreSQL
 - **Entities** extend `BaseEntity` (JPA auditing: `createdAt`, `updatedAt`)
 - **All entities use manual getters/setters** — Lombok is on classpath but not used
 - **Constructor injection** everywhere — no `@Autowired`
-- **Flyway** manages schema (V1–V14). Hibernate `ddl-auto=validate`
+- **Flyway** manages schema (V1–V18). Hibernate `ddl-auto=validate`
+
+## Security Architecture
+
+```
+Client → JWT Filter → SecurityContext → Controller
+         ↓ (no token)
+         401 Unauthorized
+
+/api/auth/*    → permitAll (public)
+/api/admin/*   → ROLE_ADMIN only
+/api/*         → authenticated (any role)
+/*             → permitAll (static files, SPA)
+```
+
+- **JWT tokens** via jjwt 0.12.6 (access: 15min, refresh: 7 days)
+- **BCrypt** password hashing
+- **Email OTP** for registration verification and password reset
+- **Admin user** seeded on startup via `AdminUserSeeder`
+- **Multi-tenant**: `user_id` FK on all domain tables
 
 ## External Integrations
 

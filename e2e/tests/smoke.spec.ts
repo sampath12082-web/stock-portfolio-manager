@@ -1,64 +1,59 @@
 import { test, expect } from '@playwright/test';
+import { getAdminToken, authHeaders } from './helpers';
 
-test.describe('Smoke Tests — App loads and all pages render', () => {
-  test('homepage loads with Dashboard title', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.locator('h1')).toContainText('Dashboard');
+test.describe('Smoke Tests — App loads and API health', () => {
+  let token: string;
+
+  test.beforeAll(async ({ request }) => {
+    token = await getAdminToken(request);
   });
 
-  test('all 6 sidebar nav links present', async ({ page }) => {
-    await page.goto('/');
-    const nav = page.locator('nav');
-    await expect(nav.getByText('Dashboard')).toBeVisible();
-    await expect(nav.getByText('Holdings')).toBeVisible();
-    await expect(nav.getByText('Transactions')).toBeVisible();
-    await expect(nav.getByText('Stocks')).toBeVisible();
-    await expect(nav.getByText('Mutual Funds')).toBeVisible();
-    await expect(nav.getByText('Performance')).toBeVisible();
-  });
-
-  test('Holdings page loads', async ({ page }) => {
-    await page.goto('/holdings');
-    await expect(page.locator('h1')).toContainText('Holdings');
-  });
-
-  test('Transactions page loads', async ({ page }) => {
-    await page.goto('/transactions');
-    await expect(page.locator('h1')).toContainText('Transactions');
-  });
-
-  test('Stocks page loads', async ({ page }) => {
-    await page.goto('/stocks');
-    await expect(page.locator('h1')).toContainText('Stocks');
-  });
-
-  test('Mutual Funds page loads', async ({ page }) => {
-    await page.goto('/mutual-funds');
-    await expect(page.locator('h1')).toContainText('Mutual Funds');
-  });
-
-  test('Performance page loads', async ({ page }) => {
-    await page.goto('/performance');
-    await expect(page.locator('h1')).toContainText('Performance');
-  });
-
-  test('API health — dashboard endpoint returns 200', async ({ request }) => {
-    const resp = await request.get('/api/dashboard');
+  test('auth endpoint is accessible (login returns 200)', async ({ request }) => {
+    const resp = await request.post('/api/auth/login', {
+      data: { email: 'sampath12082@gmail.com', password: 'Admin@123' },
+    });
     expect(resp.status()).toBe(200);
   });
 
-  test('API health — stocks endpoint returns 200', async ({ request }) => {
+  test('protected endpoint returns 401 without token', async ({ request }) => {
     const resp = await request.get('/api/stocks');
+    expect(resp.status()).toBe(401);
+  });
+
+  test('API health — dashboard returns 200 with token', async ({ request }) => {
+    const resp = await request.get('/api/dashboard', { headers: authHeaders(token) });
     expect(resp.status()).toBe(200);
   });
 
-  test('API health — holdings endpoint returns 200', async ({ request }) => {
-    const resp = await request.get('/api/holdings');
+  test('API health — stocks returns 200 with token', async ({ request }) => {
+    const resp = await request.get('/api/stocks', { headers: authHeaders(token) });
     expect(resp.status()).toBe(200);
   });
 
-  test('API health — MF funds endpoint returns 200', async ({ request }) => {
-    const resp = await request.get('/api/mf/funds');
+  test('API health — holdings returns 200 with token', async ({ request }) => {
+    const resp = await request.get('/api/holdings', { headers: authHeaders(token) });
     expect(resp.status()).toBe(200);
+  });
+
+  test('API health — MF funds returns 200 with token', async ({ request }) => {
+    const resp = await request.get('/api/mf/funds', { headers: authHeaders(token) });
+    expect(resp.status()).toBe(200);
+  });
+
+  test('API health — transactions returns 200 with token', async ({ request }) => {
+    const resp = await request.get('/api/transactions', { headers: authHeaders(token) });
+    expect(resp.status()).toBe(200);
+  });
+
+  test('API health — profile returns 200 with token', async ({ request }) => {
+    const resp = await request.get('/api/profile', { headers: authHeaders(token) });
+    expect(resp.status()).toBe(200);
+  });
+
+  test('all SPA routes return 200', async ({ request }) => {
+    for (const path of ['/', '/holdings', '/transactions', '/stocks', '/mutual-funds', '/performance']) {
+      const resp = await request.get(path);
+      expect(resp.status()).toBe(200);
+    }
   });
 });

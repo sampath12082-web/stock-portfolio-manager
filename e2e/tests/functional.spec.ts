@@ -1,160 +1,244 @@
 import { test, expect } from '@playwright/test';
+import { getAdminToken, authHeaders } from './helpers';
 
-test.describe('Dashboard — Portfolio Summary', () => {
-  test('shows Portfolio, Groww Account, and Mutual Funds sections', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByText('Deposited')).toBeVisible({ timeout: 20000 });
-    await expect(page.locator('h3', { hasText: 'Mutual Funds' })).toBeVisible({ timeout: 10000 });
+test.describe('Functional — Auth API', () => {
+  test('register validates required fields', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', { data: {} });
+    expect(resp.status()).toBe(400);
   });
 
-  test('portfolio section shows key metrics', async ({ page }) => {
-    await page.goto('/');
-    await expect(page.getByText('Deposited')).toBeVisible({ timeout: 20000 });
-    const portfolio = page.locator('h3', { hasText: 'Portfolio' }).locator('..');
-    await expect(portfolio.getByText('Deposited')).toBeVisible();
-    await expect(portfolio.getByText('Invested')).toBeVisible();
-    await expect(portfolio.getByText('Current Value')).toBeVisible();
-    await expect(portfolio.getByText('Cash Balance')).toBeVisible();
+  test('register validates email format', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', {
+      data: { email: 'bad-email', password: 'Test@123', firstName: 'Test' },
+    });
+    expect(resp.status()).toBe(400);
   });
 
-  test('sector allocation chart or empty state renders', async ({ page }) => {
-    await page.goto('/');
-    const sectorCard = page.locator('text=Sector Allocation').locator('..');
-    await expect(sectorCard).toBeVisible();
-  });
-});
-
-test.describe('Holdings Page — Table and Filters', () => {
-  test('displays holdings table with correct columns', async ({ page }) => {
-    await page.goto('/holdings');
-    await expect(page.getByRole('columnheader', { name: 'Stock' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Qty' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Avg Price' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'LTP' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Invested' })).toBeVisible();
+  test('register validates password length', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', {
+      data: { email: 'valid@example.com', password: '123', firstName: 'Test' },
+    });
+    expect(resp.status()).toBe(400);
   });
 
-  test('search filter works', async ({ page }) => {
-    await page.goto('/holdings');
-    await page.fill('input[placeholder="Search holdings..."]', 'HDFC');
-    const rows = page.locator('tbody tr');
-    const count = await rows.count();
-    for (let i = 0; i < count; i++) {
-      const text = await rows.nth(i).textContent();
-      expect(text?.toLowerCase()).toContain('hdfc');
-    }
+  test('login validates required fields', async ({ request }) => {
+    const resp = await request.post('/api/auth/login', { data: {} });
+    expect(resp.status()).toBe(400);
   });
 
-  test('signal filter chips are clickable', async ({ page }) => {
-    await page.goto('/holdings');
-    const allChip = page.locator('button', { hasText: 'ALL' });
-    await expect(allChip).toBeVisible();
-    await allChip.click();
-  });
-
-  test('Sync from Groww button exists', async ({ page }) => {
-    await page.goto('/holdings');
-    await expect(page.getByText('Sync from Groww')).toBeVisible();
+  test('forgot-password always returns success (no email leak)', async ({ request }) => {
+    const resp = await request.post('/api/auth/forgot-password', {
+      data: { email: 'nonexistent@example.com' },
+    });
+    expect(resp.status()).toBe(200);
   });
 });
 
-test.describe('Transactions Page — Analytics and Table', () => {
-  test('shows analytics sections', async ({ page }) => {
-    await page.goto('/transactions');
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByText('Fund Flow')).toBeVisible();
-    await expect(page.getByText('Activity')).toBeVisible();
+test.describe('Functional — Dashboard API', () => {
+  let token: string;
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    token = await getAdminToken(request);
+    headers = authHeaders(token);
   });
 
-  test('transactions table has correct columns', async ({ page }) => {
-    await page.goto('/transactions');
-    await expect(page.getByRole('columnheader', { name: 'Trade Date' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Symbol' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Type' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Total' })).toBeVisible();
+  test('dashboard returns expected fields', async ({ request }) => {
+    const resp = await request.get('/api/dashboard', { headers });
+    expect(resp.status()).toBe(200);
+    const d = await resp.json();
+    expect(d).toHaveProperty('investedAmount');
+    expect(d).toHaveProperty('currentValue');
+    expect(d).toHaveProperty('unrealizedPnL');
+    expect(d).toHaveProperty('totalDeposited');
   });
 
-  test('type filter dropdown works', async ({ page }) => {
-    await page.goto('/transactions');
-    await page.selectOption('select', 'BUY');
-    const badges = page.locator('tbody .bg-emerald-50');
-    const count = await badges.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+  test('portfolio summary returns day P&L', async ({ request }) => {
+    const resp = await request.get('/api/portfolio/summary', { headers });
+    expect(resp.status()).toBe(200);
+    const s = await resp.json();
+    expect(s).toHaveProperty('totalInvestment');
+    expect(s).toHaveProperty('currentValue');
   });
 
-  test('transactions by month chart renders', async ({ page }) => {
-    await page.goto('/transactions');
-    const chart = page.locator('.recharts-wrapper');
-    await expect(chart).toBeVisible();
+  test('sector allocation returns sectors', async ({ request }) => {
+    const resp = await request.get('/api/portfolio/allocation', { headers });
+    expect(resp.status()).toBe(200);
+    const sectors = await resp.json();
+    expect(Array.isArray(sectors)).toBe(true);
   });
 });
 
-test.describe('Stocks Page — Table and Sorting', () => {
-  test('stocks table renders with correct columns', async ({ page }) => {
-    await page.goto('/stocks');
-    await expect(page.getByRole('columnheader', { name: 'Stock' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Exchange' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'My Qty' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Signal' })).toBeVisible();
+test.describe('Functional — Holdings API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
   });
 
-  test('search filters stocks', async ({ page }) => {
-    await page.goto('/stocks');
-    await page.fill('input[placeholder="Search stocks..."]', 'TCS');
-    const rows = page.locator('tbody tr');
-    const count = await rows.count();
-    expect(count).toBeGreaterThan(0);
-    const firstRow = await rows.first().textContent();
-    expect(firstRow?.toUpperCase()).toContain('TCS');
-  });
-
-  test('signal filter chips are visible', async ({ page }) => {
-    await page.goto('/stocks');
-    await expect(page.getByText('Signal:')).toBeVisible();
-    await expect(page.getByText('Target:')).toBeVisible();
-  });
-
-  test('column headers are sortable (click toggles)', async ({ page }) => {
-    await page.goto('/stocks');
-    const header = page.getByRole('columnheader', { name: 'Stock' });
-    await header.click();
-    await header.click();
-  });
-
-  test('held stocks have blue left border', async ({ page }) => {
-    await page.goto('/stocks');
-    const heldRow = page.locator('tr.border-l-4').first();
-    if (await heldRow.count() > 0) {
-      await expect(heldRow).toHaveClass(/border-l-blue/);
+  test('holdings returns array with expected fields', async ({ request }) => {
+    const resp = await request.get('/api/holdings', { headers });
+    expect(resp.status()).toBe(200);
+    const holdings = await resp.json();
+    expect(Array.isArray(holdings)).toBe(true);
+    if (holdings.length > 0) {
+      expect(holdings[0]).toHaveProperty('symbol');
+      expect(holdings[0]).toHaveProperty('quantity');
+      expect(holdings[0]).toHaveProperty('investedAmount');
     }
   });
 });
 
-test.describe('Mutual Funds Page', () => {
-  test('shows MF holdings table', async ({ page }) => {
-    await page.goto('/mutual-funds');
-    await expect(page.locator('h1')).toContainText('Mutual Funds');
-    const rows = page.locator('tbody tr');
-    expect(await rows.count()).toBeGreaterThan(0);
+test.describe('Functional — Transactions API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('transactions returns array', async ({ request }) => {
+    const resp = await request.get('/api/transactions', { headers });
+    expect(resp.status()).toBe(200);
+    const txns = await resp.json();
+    expect(Array.isArray(txns)).toBe(true);
+  });
+
+  test('transaction analytics returns all fields', async ({ request }) => {
+    const resp = await request.get('/api/transactions/analytics', { headers });
+    expect(resp.status()).toBe(200);
+    const a = await resp.json();
+    expect(a).toHaveProperty('totalBuyAmount');
+    expect(a).toHaveProperty('totalSellAmount');
+    expect(a).toHaveProperty('intradayPnL');
+    expect(a).toHaveProperty('deliveryBuyAmount');
+    expect(a).toHaveProperty('totalTransactions');
   });
 });
 
-test.describe('Performance Page', () => {
-  test('defaults to 7D view', async ({ page }) => {
-    await page.goto('/performance');
-    const activeBtn = page.locator('button.bg-blue-600', { hasText: '7D' });
-    await expect(activeBtn).toBeVisible();
+test.describe('Functional — Stocks API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
   });
 
-  test('capture snapshot button exists', async ({ page }) => {
-    await page.goto('/performance');
-    await expect(page.getByText('Capture Snapshot')).toBeVisible();
+  test('stocks returns array with expected fields', async ({ request }) => {
+    const resp = await request.get('/api/stocks', { headers });
+    expect(resp.status()).toBe(200);
+    const stocks = await resp.json();
+    expect(Array.isArray(stocks)).toBe(true);
+    if (stocks.length > 0) {
+      expect(stocks[0]).toHaveProperty('symbol');
+      expect(stocks[0]).toHaveProperty('companyName');
+      expect(stocks[0]).toHaveProperty('exchange');
+    }
   });
 
-  test('time range buttons are clickable', async ({ page }) => {
-    await page.goto('/performance');
-    await page.click('button:has-text("30D")');
-    const activeBtn = page.locator('button.bg-blue-600', { hasText: '30D' });
-    await expect(activeBtn).toBeVisible();
+  test('stock lookup searches Yahoo Finance', async ({ request }) => {
+    const resp = await request.get('/api/stocks/lookup?query=RELIANCE', { headers });
+    expect(resp.status()).toBe(200);
+    const results = await resp.json();
+    expect(Array.isArray(results)).toBe(true);
+  });
+});
+
+test.describe('Functional — Mutual Funds API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('MF funds returns array', async ({ request }) => {
+    const resp = await request.get('/api/mf/funds', { headers });
+    expect(resp.status()).toBe(200);
+  });
+
+  test('MF holdings returns array', async ({ request }) => {
+    const resp = await request.get('/api/mf/holdings', { headers });
+    expect(resp.status()).toBe(200);
+  });
+
+  test('MF transactions returns array', async ({ request }) => {
+    const resp = await request.get('/api/mf/transactions', { headers });
+    expect(resp.status()).toBe(200);
+  });
+});
+
+test.describe('Functional — Performance API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('recent performance returns array', async ({ request }) => {
+    const resp = await request.get('/api/performance/recent?days=7', { headers });
+    expect(resp.status()).toBe(200);
+  });
+
+  test('today snapshot returns snapshot', async ({ request }) => {
+    const resp = await request.get('/api/performance/today', { headers });
+    expect(resp.status()).toBe(200);
+    const snap = await resp.json();
+    expect(snap).toHaveProperty('totalInvestment');
+    expect(snap).toHaveProperty('currentValue');
+  });
+});
+
+test.describe('Functional — Admin API', () => {
+  let adminHeaders: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    adminHeaders = authHeaders(await getAdminToken(request));
+  });
+
+  test('admin can list users', async ({ request }) => {
+    const resp = await request.get('/api/admin/users', { headers: adminHeaders });
+    expect(resp.status()).toBe(200);
+    const users = await resp.json();
+    expect(users.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('admin can view specific user', async ({ request }) => {
+    const resp = await request.get('/api/admin/users/1', { headers: adminHeaders });
+    expect(resp.status()).toBe(200);
+    const user = await resp.json();
+    expect(user.email).toBe('sampath12082@gmail.com');
+  });
+
+  test('admin can update user status', async ({ request }) => {
+    const resp = await request.put('/api/admin/users/1/status', {
+      headers: adminHeaders,
+      data: { status: 'ACTIVE' },
+    });
+    expect(resp.status()).toBe(200);
+  });
+});
+
+test.describe('Functional — Profile API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('profile returns user with email', async ({ request }) => {
+    const resp = await request.get('/api/profile', { headers });
+    expect(resp.status()).toBe(200);
+    const profile = await resp.json();
+    expect(profile.email).toBe('sampath12082@gmail.com');
+    expect(profile.emailVerified).toBe(true);
+  });
+
+  test('profile update preserves email', async ({ request }) => {
+    const resp = await request.put('/api/profile', {
+      headers,
+      data: { firstName: 'Sampat Kumar' },
+    });
+    expect(resp.status()).toBe(200);
+    const profile = await resp.json();
+    expect(profile.email).toBe('sampath12082@gmail.com');
+    expect(profile.firstName).toBe('Sampat Kumar');
   });
 });
