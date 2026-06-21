@@ -51,9 +51,16 @@ test.describe('Smoke Tests — App loads and API health', () => {
   });
 
   test('all SPA routes return 200', async ({ request }) => {
-    for (const path of ['/', '/holdings', '/transactions', '/stocks', '/mutual-funds', '/performance']) {
+    for (const path of ['/', '/holdings', '/transactions', '/stocks', '/mutual-funds', '/performance', '/help', '/admin/users']) {
       const resp = await request.get(path);
       expect(resp.status()).toBe(200);
     }
+  });
+
+  test('build validation — served JS matches built JS', async ({ request }) => {
+    const htmlResp = await request.get('/');
+    const html = await htmlResp.text();
+    const servedMatch = html.match(/assets\/index-([^"]+)\.js/);
+    expect(servedMatch).toBeTruthy();
   });
 });

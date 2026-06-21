@@ -33,16 +33,28 @@ Flyway V1–V18 apply automatically on startup.
 
 ## Run (Agent Path)
 
-### Start backend
+### CRITICAL: Backend must be restarted after frontend build
+
+The backend serves static files from its classpath at startup. A frontend `npm run build` 
+outputs new files to `backend/src/main/resources/static/`, but the running backend still 
+serves the OLD files. **Always restart the backend after any frontend build.**
 
 ```bash
-cd backend && ./mvnw spring-boot:run -q > /dev/null 2>&1 &
+# Full build + restart sequence:
+cd frontend && npm run build && cd ..
+# Stop existing backend:
+pkill -f "spring-boot:run" 2>/dev/null || true
+# Recompile and start:
+cd backend && ./mvnw compile -q && ./mvnw spring-boot:run -q > /dev/null 2>&1 &
 # Wait for readiness:
 for i in $(seq 1 20); do
   code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/auth/login 2>/dev/null)
   [ "$code" != "000" ] && echo "Ready" && break
   sleep 3
 done
+# Verify build files match:
+echo "Served: $(curl -s http://localhost:8081/ | grep -o 'assets/index-[^\"]*\.js')"
+echo "Built:  $(ls backend/src/main/resources/static/assets/index-*.js | xargs basename)"
 ```
 
 ### Authenticate (required for all API calls)

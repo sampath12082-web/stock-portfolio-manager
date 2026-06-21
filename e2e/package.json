@@ -9,6 +9,7 @@
     "test:functional": "npx playwright test tests/functional.spec.ts",
     "test:auth": "npx playwright test tests/auth.spec.ts",
     "test:regression": "npx playwright test tests/regression.spec.ts",
+    "test:ui": "npx playwright test tests/ui-rendering.spec.ts",
     "test:headed": "npx playwright test --headed",
     "test:report": "npx playwright show-report"
   },
