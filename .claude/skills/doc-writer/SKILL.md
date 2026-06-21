@@ -1,11 +1,42 @@
 ---
 name: doc-writer
-description: Audit and sync all documentation with actual app functionality. Use when asked to update all docs, sync docs with code, ensure docs are current, or write missing documentation.
+description: Update, maintain, audit, and sync all project documentation with actual app functionality. Use when asked to update docs, maintain documentation, sync docs with code, ensure docs are current, write missing documentation, review handoff, or document a new feature/bug/enhancement.
 ---
 
-# Document Writer
+# Document Writer & Maintainer
 
-Audits the entire documentation set against the running application and codebase, identifies gaps and stale content, then updates all docs to match reality. Unlike `maintain-docs` (which provides rules), this skill **does the work** — reads code, queries APIs, and rewrites docs.
+Governs documentation rules AND performs the actual work — audits the entire documentation set against the running application, identifies gaps and stale content, then updates all docs to match reality.
+
+## Documentation Inventory
+
+| File | Purpose | When to Update |
+|------|---------|----------------|
+| `docs/HANDOFF.md` | Session continuity — current state, pending work, test results | **Every session end**, after any deploy, after data changes |
+| `docs/BUGS.md` | Bug tracking with severity, root cause, resolution | When bugs are found, investigated, or fixed |
+| `docs/ENHANCEMENTS.md` | Feature/enhancement tracking with priority and status | Before starting new features, after completing them |
+| `docs/architecture.md` | System diagram, project structure, security flow | When new modules/integrations are added |
+| `docs/api-reference.md` | REST API endpoint reference | When endpoints are added/changed/removed |
+| `docs/features.md` | Feature documentation for all pages | When UI features change |
+| `docs/user-module.md` | Auth, security questions, password policy, RSA encryption | When auth/user features change |
+| `CLAUDE.md` | Claude Code guidance — build commands, architecture overview | When project structure or build process changes |
+
+## Rules
+
+### Before Any Code Change
+1. **New feature?** → Add to `docs/ENHANCEMENTS.md` with number, priority, status "Open"
+2. **Bug found?** → Add to `docs/BUGS.md` with severity, root cause, status "Open"
+3. **Never implement without logging first**
+
+### After Code Changes
+1. **Bug fixed?** → Move from Open to Resolved in `docs/BUGS.md` with resolution and date
+2. **Enhancement done?** → Update status in `docs/ENHANCEMENTS.md`
+3. **New API endpoint?** → Add to `docs/api-reference.md`
+4. **UI changed?** → Update `docs/features.md`
+5. **Auth/user changed?** → Update `docs/user-module.md`
+6. **Build/structure changed?** → Update `CLAUDE.md`
+
+### Session End (Always)
+Update `docs/HANDOFF.md` with current state, pending work, test results.
 
 ## When to Use
 
