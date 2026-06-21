@@ -2,9 +2,9 @@
 
 ## Open Bugs
 
-None — all bugs resolved.
-
-Note: Bug #20 (sector allocation empty) was logged and fixed in same session — see resolved #20 below.
+| # | Severity | Bug | Root Cause | Status |
+|---|----------|-----|-----------|--------|
+| 21 | High | Admin panel not accessible — no sidebar link, no `/admin` route for ROLE_ADMIN users | Frontend missing: AdminUsersPage, sidebar admin link (conditional on ROLE_ADMIN), App.tsx route `/admin/users` wrapped in AdminGuard | Open |
 
 ## Resolved Bugs
 
