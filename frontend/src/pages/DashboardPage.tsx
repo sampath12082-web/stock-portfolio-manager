@@ -175,29 +175,31 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {g && g.todayPositions.length > 0 && (
+      {g && (
         <Card title="Today's Positions">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="text-gray-500 text-left border-b border-gray-200">
-                <th className="pb-2 px-2">Symbol</th><th className="pb-2 px-2">Exchange</th>
-                <th className="pb-2 px-2 text-right">Qty</th><th className="pb-2 px-2 text-right">Price</th>
-                <th className="pb-2 px-2 text-right">Realised P&L</th><th className="pb-2 px-2">Product</th>
-              </tr></thead>
-              <tbody>
-                {g.todayPositions.map((p, i) => (
-                  <tr key={i} className="border-b border-gray-100">
-                    <td className="py-2 px-2 font-medium text-gray-900">{p.symbol}</td>
-                    <td className="py-2 px-2"><Badge variant={p.exchange === 'NSE' ? 'blue' : 'yellow'}>{p.exchange}</Badge></td>
-                    <td className="py-2 px-2 text-right">{p.quantity}</td>
-                    <td className="py-2 px-2 text-right">{formatCurrency(p.netPrice)}</td>
-                    <td className="py-2 px-2 text-right"><PnLText value={p.realisedPnl} format={formatCurrency} /></td>
-                    <td className="py-2 px-2"><Badge variant="gray">{p.product}</Badge></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {g.todayPositions.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="text-gray-500 text-left border-b border-gray-200">
+                  <th className="pb-2 px-2">Symbol</th><th className="pb-2 px-2">Exchange</th>
+                  <th className="pb-2 px-2 text-right">Qty</th><th className="pb-2 px-2 text-right">Price</th>
+                  <th className="pb-2 px-2 text-right">Realised P&L</th><th className="pb-2 px-2">Product</th>
+                </tr></thead>
+                <tbody>
+                  {g.todayPositions.map((p, i) => (
+                    <tr key={i} className="border-b border-gray-100">
+                      <td className="py-2 px-2 font-medium text-gray-900">{p.symbol}</td>
+                      <td className="py-2 px-2"><Badge variant={p.exchange === 'NSE' ? 'blue' : 'yellow'}>{p.exchange}</Badge></td>
+                      <td className="py-2 px-2 text-right">{p.quantity}</td>
+                      <td className="py-2 px-2 text-right">{formatCurrency(p.netPrice)}</td>
+                      <td className="py-2 px-2 text-right"><PnLText value={p.realisedPnl} format={formatCurrency} /></td>
+                      <td className="py-2 px-2"><Badge variant="gray">{p.product}</Badge></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : <EmptyState message="No positions today" />}
         </Card>
       )}
 
@@ -274,7 +276,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {g && g.todayOrders.length > 0 && (
+      {g && (
         <GrowwOrdersSection orders={g.todayOrders} />
       )}
     </div>
