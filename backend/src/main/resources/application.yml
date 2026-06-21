@@ -19,8 +19,28 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: 8081
+
+jwt:
+  secret: ${JWT_SECRET:bXlwb3J0Zm9saW8tc2VjcmV0LWtleS1mb3Itand0LXRva2VuLWdlbmVyYXRpb24tMjAyNg==}
+  expiration: ${JWT_EXPIRATION:900000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+
+admin:
+  default-password: ${ADMIN_DEFAULT_PASSWORD:Admin@123}
 
 groww:
   api:

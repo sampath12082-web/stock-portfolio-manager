@@ -2,7 +2,20 @@
 
 ## Open Enhancements
 
-None — all enhancements resolved.
+| # | Type | Module | Description | Priority | Status |
+|---|------|--------|-------------|----------|--------|
+| 22 | Feature | Auth | User registration — email (unique, mandatory), password (BCrypt), first name, last name | P1 | Open |
+| 23 | Feature | Auth | JWT login — email + password → access token (15min) + refresh token (7d) | P1 | Open |
+| 24 | Feature | Auth | Email OTP verification on registration (6-digit, 10-min expiry, SMTP) | P1 | Open |
+| 25 | Feature | Auth | Forgot password — send OTP to email → verify → set new password | P1 | Open |
+| 26 | Feature | Auth | Change password (authenticated, requires current password) | P1 | Open |
+| 27 | Feature | Auth | Spring Security JWT filter — protect `/api/*`, public `/api/auth/*`, admin `/api/admin/*` | P1 | Open |
+| 28 | Feature | Profile | Profile page — view/edit name, phone; email immutable and unique | P2 | Open |
+| 29 | Feature | Admin | Seed admin user on first run (super user, ROLE_ADMIN) | P1 | Open |
+| 30 | Feature | Admin | Admin panel — list users, view profiles, reset passwords, activate/inactivate/delete users | P2 | Open |
+| 31 | Feature | Groww | Per-user Groww API credentials — AES-256 encrypted in DB, only owner/admin can configure | P2 | Open |
+| 32 | Feature | Help | FAQ page — categorized questions/answers, admin-managed | P3 | Open |
+| 33 | Feature | Help | Support tickets — user submits request, admin views/responds, status tracking | P3 | Open |
 
 ## Resolved Enhancements
 
