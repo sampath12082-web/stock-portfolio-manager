@@ -85,13 +85,20 @@ Response: `investedAmount`, `currentValue`, `unrealizedPnL`, `unrealizedPnLPerce
 |--------|----------|-------------|
 | GET | `/api/portfolio/summary` | Portfolio summary with day P&L |
 | GET | `/api/portfolio/allocation` | Sector allocation (active holdings) |
-| GET | `/api/portfolio/stock-pnl` | Per-stock P&L breakdown |
+| GET | `/api/portfolio/pnl` | Per-stock P&L breakdown |
+
+## Health API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | Application health check |
 
 ## Market Data APIs
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/quotes` | All cached quotes |
+| GET | `/api/quotes/{symbol}` | Quote for specific stock |
 | POST | `/api/quotes/refresh` | Force refresh from Yahoo Finance |
 
 ## Performance APIs
@@ -99,15 +106,22 @@ Response: `investedAmount`, `currentValue`, `unrealizedPnL`, `unrealizedPnLPerce
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/performance/recent?days=7` | Recent snapshots |
+| GET | `/api/performance/history?from=&to=` | Snapshots in date range |
 | GET | `/api/performance/today` | Today's snapshot |
-| POST | `/api/performance/snapshot` | Capture snapshot |
+| POST | `/api/performance/snapshot` | Capture snapshot (overwrites if exists for today) |
 
 ## Trading Signal APIs
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/signals/active` | Active signals |
-| POST | `/api/signals/analyze` | Run technical analysis |
+| GET | `/api/signals` | List all signals |
+| GET | `/api/signals/active` | Active signals only |
+| GET | `/api/signals/today` | Today's signals |
+| GET | `/api/signals/recommendations` | Buy recommendations |
+| POST | `/api/signals` | Create manual signal |
+| POST | `/api/signals/analyze` | Run technical analysis (auto-generates signals) |
+| PUT | `/api/signals/{id}` | Update signal |
+| DELETE | `/api/signals/{id}` | Delete signal |
 
 ## Groww APIs
 

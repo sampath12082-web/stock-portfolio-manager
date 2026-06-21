@@ -73,7 +73,7 @@ Spring Boot 3.5 / Java 21 WAR backend + React 19 / Vite / Tailwind CSS frontend 
 - **DTOs** use Java records for requests and responses
 - **Entities** extend `BaseEntity` (provides `createdAt`/`updatedAt` via JPA auditing)
 - **All entities use manual getters/setters** — Lombok is on classpath but not used
-- **Database migrations** managed by Flyway (`backend/src/main/resources/db/migration/`, V1–V14). Hibernate `ddl-auto=validate` — schema changes must go through Flyway.
+- **Database migrations** managed by Flyway (`backend/src/main/resources/db/migration/`, V1–V18). Hibernate `ddl-auto=validate` — schema changes must go through Flyway. V15-V18 add users, OTP tokens, user_id FK on all domain tables, and admin user seed.
 - **Constructor injection** throughout (no `@Autowired`)
 - **Mappers** are `@Component` classes (`StockMapper`, `HoldingMapper`)
 

@@ -85,6 +85,32 @@
 - **Snapshot history table**: Date, Investment, Value, P&L, P&L%, Gainer, Loser
 - **Manual capture**: Button to create snapshot on demand
 
+### 7. Login (`/login`)
+- Email + password form
+- Error messages for invalid credentials, unverified email, inactive account
+- Links to Register and Forgot Password
+- Redirects to Dashboard on success
+
+### 8. Register (`/register`)
+- Step 1: Email, first name, last name, password
+- Step 2: OTP verification (6-digit code sent to email)
+- Redirects to Login after verification
+
+### 9. Forgot Password (`/forgot-password`)
+- Step 1: Enter email → sends OTP
+- Step 2: Enter OTP + new password → resets
+- Redirects to Login on success
+
+### 10. Profile (`/profile`)
+- **Personal Details**: email (read-only), first name, last name, phone, role display
+- **Change Password**: current password + new password form
+- Save button updates profile via API
+
+### 11. Header (all pages)
+- User's first name with profile link
+- Refresh Quotes button
+- Red Logout button (clears JWT, redirects to /login)
+
 ## P&L Formulas
 
 - **Realized P&L** = (Total Invested + Clear Cash) - Total Deposited
