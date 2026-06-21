@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, ArrowLeftRight, Database, PieChart, TrendingUp, Shield, X,
+  LayoutDashboard, Briefcase, ArrowLeftRight, Database, PieChart, TrendingUp, Shield, HelpCircle, MessageSquare, X,
 } from 'lucide-react';
 import { useAuth } from '@/auth/AuthContext';
 
@@ -11,10 +11,12 @@ const links = [
   { to: '/stocks', label: 'Stocks', icon: Database },
   { to: '/mutual-funds', label: 'Mutual Funds', icon: PieChart },
   { to: '/performance', label: 'Performance', icon: TrendingUp },
+  { to: '/help', label: 'Help & Support', icon: HelpCircle },
 ];
 
 const adminLinks = [
-  { to: '/admin/users', label: 'Admin Panel', icon: Shield },
+  { to: '/admin/users', label: 'User Management', icon: Shield },
+  { to: '/admin/tickets', label: 'Support Tickets', icon: MessageSquare },
 ];
 
 interface SidebarProps {

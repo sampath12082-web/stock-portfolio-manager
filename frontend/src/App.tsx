@@ -12,6 +12,8 @@ import MutualFundsPage from './pages/MutualFundsPage'
 import PerformancePage from './pages/PerformancePage'
 import ProfilePage from './pages/ProfilePage'
 import AdminUsersPage from './pages/AdminUsersPage'
+import AdminTicketsPage from './pages/AdminTicketsPage'
+import HelpPage from './pages/HelpPage'
 
 export default function App() {
   return (
@@ -27,7 +29,9 @@ export default function App() {
         <Route path="/mutual-funds" element={<MutualFundsPage />} />
         <Route path="/performance" element={<PerformancePage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route path="/admin/users" element={<AdminUsersPage />} />
+        <Route path="/admin/tickets" element={<AdminTicketsPage />} />
       </Route>
     </Routes>
   )
