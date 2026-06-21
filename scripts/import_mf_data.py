@@ -15,6 +15,17 @@ import requests
 from datetime import datetime
 
 BASE_URL = "http://localhost:8081/api"
+AUTH_HEADERS = {}
+
+def login(email="sampath12082@gmail.com", password="Admin@123"):
+    global AUTH_HEADERS
+    resp = requests.post(f"{BASE_URL}/auth/login", json={"email": email, "password": password}, timeout=10)
+    if resp.status_code == 200:
+        AUTH_HEADERS = {"Authorization": f"Bearer {resp.json()['accessToken']}"}
+        print(f"Logged in as {email}")
+    else:
+        print(f"Login failed: {resp.status_code}")
+        sys.exit(1)
 
 HOLDINGS_FILE = "GROWW_Reports_06192026/Mutual_Funds_4728936310_20-06-2026_20-06-2026.xlsx"
 CAPITAL_GAINS_FILE = "GROWW_Reports_06192026/Mutual_Funds_Capital_Gains_Report_01-04-2025_31-03-2026.xlsx"
@@ -42,7 +53,7 @@ KNOWN_SCHEME_CODES = {
 def search_amfi(query):
     """Search AMFI via the app's API to find scheme code."""
     try:
-        resp = requests.get(f"{BASE_URL}/mf/funds/search", params={"query": query}, timeout=30)
+        resp = requests.get(f"{BASE_URL}/mf/funds/search", params={"query": query}, headers=AUTH_HEADERS, timeout=30)
         if resp.status_code == 200:
             results = resp.json()
             if results:
@@ -73,7 +84,7 @@ def create_fund(scheme_code, scheme_name, fund_house, category, fund_type=None):
         "fundType": fund_type or "Open Ended",
     }
     try:
-        resp = requests.post(f"{BASE_URL}/mf/funds", json=payload, timeout=10)
+        resp = requests.post(f"{BASE_URL}/mf/funds", json=payload, headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 201:
             print(f"  Created fund: {scheme_name}")
             return resp.json()
@@ -95,7 +106,7 @@ def create_holding(scheme_code, units, avg_nav):
         "averageNav": avg_nav,
     }
     try:
-        resp = requests.post(f"{BASE_URL}/mf/holdings", json=payload, timeout=10)
+        resp = requests.post(f"{BASE_URL}/mf/holdings", json=payload, headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 201:
             print(f"  Created holding: {scheme_code} ({units} units @ {avg_nav})")
             return resp.json()
@@ -119,7 +130,7 @@ def create_mf_transaction(scheme_code, units, nav, amount, txn_type, trade_date,
         "description": description,
     }
     try:
-        resp = requests.post(f"{BASE_URL}/mf/transactions", json=payload, timeout=10)
+        resp = requests.post(f"{BASE_URL}/mf/transactions", json=payload, headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 201:
             return resp.json()
         else:
@@ -196,7 +207,7 @@ def import_capital_gains():
 
     existing_funds = set()
     try:
-        resp = requests.get(f"{BASE_URL}/mf/funds", timeout=10)
+        resp = requests.get(f"{BASE_URL}/mf/funds", headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 200:
             for f in resp.json():
                 existing_funds.add(str(f.get("schemeCode", "")))
@@ -278,7 +289,7 @@ def refresh_navs():
     """Refresh NAVs from AMFI feed."""
     print("\n=== Refreshing NAVs from AMFI ===")
     try:
-        resp = requests.post(f"{BASE_URL}/mf/funds/refresh-nav", timeout=60)
+        resp = requests.post(f"{BASE_URL}/mf/funds/refresh-nav", headers=AUTH_HEADERS, timeout=60)
         if resp.status_code == 200:
             print("  NAVs refreshed successfully")
         else:
@@ -291,9 +302,9 @@ def verify():
     """Verify import results."""
     print("\n=== Verification ===")
     try:
-        funds = requests.get(f"{BASE_URL}/mf/funds", timeout=10).json()
-        holdings = requests.get(f"{BASE_URL}/mf/holdings", timeout=10).json()
-        txns = requests.get(f"{BASE_URL}/mf/transactions", timeout=10).json()
+        funds = requests.get(f"{BASE_URL}/mf/funds", headers=AUTH_HEADERS, timeout=10).json()
+        holdings = requests.get(f"{BASE_URL}/mf/holdings", headers=AUTH_HEADERS, timeout=10).json()
+        txns = requests.get(f"{BASE_URL}/mf/transactions", headers=AUTH_HEADERS, timeout=10).json()
         print(f"  Funds: {len(funds)}")
         print(f"  Holdings (active): {len(holdings)}")
         print(f"  Transactions: {len(txns)}")
@@ -311,8 +322,10 @@ if __name__ == "__main__":
     print("MyPortfolio — MF Data Import")
     print(f"Backend: {BASE_URL}")
 
+    login()
+
     try:
-        resp = requests.get(f"{BASE_URL}/mf/funds", timeout=5)
+        resp = requests.get(f"{BASE_URL}/mf/funds", headers=AUTH_HEADERS, timeout=5)
         print(f"Backend reachable (status {resp.status_code})")
     except Exception:
         print("ERROR: Backend not reachable. Start with: ./mvnw spring-boot:run")

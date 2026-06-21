@@ -16,6 +16,19 @@ import requests
 from datetime import datetime
 
 BASE_URL = "http://localhost:8081/api"
+AUTH_HEADERS = {}
+
+def login(email="sampath12082@gmail.com", password="Admin@123"):
+    """Login and set auth headers globally."""
+    global AUTH_HEADERS
+    resp = requests.post(f"{BASE_URL}/auth/login", json={"email": email, "password": password}, timeout=10)
+    if resp.status_code == 200:
+        token = resp.json()["accessToken"]
+        AUTH_HEADERS = {"Authorization": f"Bearer {token}"}
+        print(f"Logged in as {email}")
+    else:
+        print(f"Login failed: {resp.status_code}")
+        sys.exit(1)
 
 ORDERS_FILE = "GROWW_Reports_06192026/Stocks_Order_History_4728936310_01-04-2026_19-06-2026.xlsx"
 BALANCE_FILE = "GROWW_Reports_06192026/Groww_Balance_Statement_4728936310_01-04-2026_19-06-2026.xlsx"
@@ -24,7 +37,7 @@ BALANCE_FILE = "GROWW_Reports_06192026/Groww_Balance_Statement_4728936310_01-04-
 def ensure_stock(symbol, company_name, exchange="NSE"):
     """Ensure stock exists in the database, create if needed."""
     try:
-        resp = requests.get(f"{BASE_URL}/stocks/{symbol}", timeout=10)
+        resp = requests.get(f"{BASE_URL}/stocks/{symbol}", headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 200:
             return True
     except Exception:
@@ -36,7 +49,7 @@ def ensure_stock(symbol, company_name, exchange="NSE"):
         "exchange": exchange,
     }
     try:
-        resp = requests.post(f"{BASE_URL}/stocks", json=payload, timeout=10)
+        resp = requests.post(f"{BASE_URL}/stocks", json=payload, headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 201:
             print(f"  Created stock: {symbol} ({company_name})")
             return True
@@ -87,7 +100,7 @@ def create_transaction(symbol, quantity, price, txn_type, trade_date, descriptio
         "tradeType": trade_type,
     }
     try:
-        resp = requests.post(f"{BASE_URL}/transactions", json=payload, timeout=10)
+        resp = requests.post(f"{BASE_URL}/transactions", json=payload, headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 201:
             return resp.json()
         else:
@@ -108,7 +121,7 @@ def create_fund_transaction(txn_type, amount, trade_date, description):
         "description": description,
     }
     try:
-        resp = requests.post(f"{BASE_URL}/transactions", json=payload, timeout=10)
+        resp = requests.post(f"{BASE_URL}/transactions", json=payload, headers=AUTH_HEADERS, timeout=10)
         if resp.status_code == 201:
             return resp.json()
         else:
@@ -299,9 +312,9 @@ def verify():
     """Verify import results."""
     print("\n=== Verification ===")
     try:
-        stocks = requests.get(f"{BASE_URL}/stocks", timeout=10).json()
-        txns = requests.get(f"{BASE_URL}/transactions", timeout=10).json()
-        analytics = requests.get(f"{BASE_URL}/transactions/analytics", timeout=10).json()
+        stocks = requests.get(f"{BASE_URL}/stocks", headers=AUTH_HEADERS, timeout=10).json()
+        txns = requests.get(f"{BASE_URL}/transactions", headers=AUTH_HEADERS, timeout=10).json()
+        analytics = requests.get(f"{BASE_URL}/transactions/analytics", headers=AUTH_HEADERS, timeout=10).json()
 
         print(f"  Total stocks: {len(stocks)}")
         print(f"  Total transactions: {len(txns)}")
@@ -317,8 +330,10 @@ if __name__ == "__main__":
     print("MyPortfolio — Stock Data Import")
     print(f"Backend: {BASE_URL}")
 
+    login()
+
     try:
-        resp = requests.get(f"{BASE_URL}/stocks", timeout=5)
+        resp = requests.get(f"{BASE_URL}/stocks", headers=AUTH_HEADERS, timeout=5)
         print(f"Backend reachable (status {resp.status_code})")
     except Exception:
         print("ERROR: Backend not reachable. Start with: ./mvnw spring-boot:run")
