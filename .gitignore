@@ -37,4 +37,6 @@ GROWW_Reports_06192026/
 src/main/resources/static/
 frontend/node_modules/
 frontend/dist/
-.claude/
+.claude/plans/
+.claude/memory/
+.claude/projects/
