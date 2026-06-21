@@ -109,11 +109,32 @@ export default function DashboardPage() {
   const realizedPnL = (d && clearCash != null) ? (d.investedAmount + clearCash) - d.totalDeposited : null;
   const totalPnL = (d && realizedPnL != null) ? realizedPnL + d.unrealizedPnL : null;
 
+  const totalInvested = (d?.investedAmount ?? 0) + mfInvested;
+  const totalCurrentValue = (d?.currentValue ?? 0) + mfCurrent;
+  const totalCash = clearCash ?? 0;
+  const totalNetWorth = totalCurrentValue + totalCash;
+  const totalUnrealizedPnL = (d?.unrealizedPnL ?? 0) + mfPnL;
+  const totalUnrealizedPct = totalInvested > 0 ? (totalUnrealizedPnL / totalInvested) * 100 : 0;
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="bg-white border-2 border-blue-200 rounded-lg shadow-sm p-4">
+          <h3 className="text-xs font-bold text-blue-500 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-blue-100">Total Funds</h3>
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Total Invested</span><span className="font-semibold text-gray-900">{formatCurrency(totalInvested)}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(totalCurrentValue)}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Cash</span><span className="font-semibold text-gray-900">{clearCash != null ? formatCurrency(totalCash) : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Net Worth</span><span className="font-bold text-gray-900">{clearCash != null ? formatCurrency(totalNetWorth) : formatCurrency(totalCurrentValue)}</span></div>
+            <div className="border-t border-blue-100 my-1" />
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Unrealized P&L</span><span className="font-semibold"><PnLText value={totalUnrealizedPnL} format={formatCurrency} /><span className="text-xs ml-1">(<PnLText value={totalUnrealizedPct} format={formatPercentage} />)</span></span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Stocks</span><span className="font-semibold text-gray-900">{formatCurrency(d?.currentValue)}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Mutual Funds</span><span className="font-semibold text-gray-900">{formatCurrency(mfCurrent)}</span></div>
+          </div>
+        </div>
+
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Portfolio</h3>
           <div className="space-y-1.5">
@@ -126,6 +147,17 @@ export default function DashboardPage() {
             <div className="flex justify-between text-sm"><span className="text-gray-500">Realized P&L</span><span className="font-semibold">{realizedPnL != null ? <PnLText value={realizedPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-500">Total P&L</span><span className="font-semibold">{totalPnL != null ? <PnLText value={totalPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
             <div className="flex justify-between text-sm"><span className="text-gray-500">Day Change</span><span className="font-semibold"><PnLText value={s?.dayPnL} format={formatCurrency} />{s?.dayPnLPercentage != null && <span className="text-xs ml-1">(<PnLText value={s.dayPnLPercentage} format={formatPercentage} />)</span>}</span></div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Mutual Funds</h3>
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Holdings</span><span className="font-semibold text-gray-900">{mf?.length ?? 0} funds</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(mfInvested)}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(mfCurrent)}</span></div>
+            <div className="border-t border-gray-100 my-1" />
+            <div className="flex justify-between text-sm"><span className="text-gray-500">P&L</span><span className="font-semibold"><PnLText value={mfPnL} format={formatCurrency} /><span className="text-xs ml-1">(<PnLText value={mfPnLPct} format={formatPercentage} />)</span></span></div>
           </div>
         </div>
 
@@ -158,21 +190,9 @@ export default function DashboardPage() {
             <div className="flex flex-col items-center justify-center py-6 text-gray-400">
               <p className="text-sm">Groww API offline</p>
               <p className="text-xs mt-1">Renew API key at groww.in/trade-api</p>
-              <p className="text-xs mt-1">Cash Balance, Realized P&L unavailable</p>
             </div>
           </div>
         )}
-
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Mutual Funds</h3>
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Holdings</span><span className="font-semibold text-gray-900">{mf?.length ?? 0} funds</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(mfInvested)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(mfCurrent)}</span></div>
-            <div className="border-t border-gray-100 my-1" />
-            <div className="flex justify-between text-sm"><span className="text-gray-500">P&L</span><span className="font-semibold"><PnLText value={mfPnL} format={formatCurrency} /><span className="text-xs ml-1">(<PnLText value={mfPnLPct} format={formatPercentage} />)</span></span></div>
-          </div>
-        </div>
       </div>
 
       {g && (
