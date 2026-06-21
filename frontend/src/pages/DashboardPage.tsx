@@ -141,50 +141,62 @@ export default function DashboardPage() {
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Portfolio</h3>
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Deposited</span><span className="font-semibold text-gray-900">{formatCurrency(d?.totalDeposited)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(d?.investedAmount)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(d?.currentValue)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Cash Balance</span><span className="font-semibold text-gray-900">{cashBalance != null ? formatCurrency(cashBalance) : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
-            <div className="border-t border-gray-100 my-1" />
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Unrealized P&L</span><span className="font-semibold"><PnLText value={d?.unrealizedPnL} format={formatCurrency} />{d?.unrealizedPnLPercentage != null && <span className="text-xs ml-1">(<PnLText value={d.unrealizedPnLPercentage} format={formatPercentage} />)</span>}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Realized P&L</span><span className="font-semibold">{realizedPnL != null ? <PnLText value={realizedPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Total P&L</span><span className="font-semibold">{totalPnL != null ? <PnLText value={totalPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Day Change</span><span className="font-semibold"><PnLText value={s?.dayPnL} format={formatCurrency} />{s?.dayPnLPercentage != null && <span className="text-xs ml-1">(<PnLText value={s.dayPnLPercentage} format={formatPercentage} />)</span>}</span></div>
+          <div className="grid grid-cols-[1fr_1px_1fr] gap-x-4">
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Deposited</span><span className="font-semibold text-gray-900">{formatCurrency(d?.totalDeposited)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(d?.investedAmount)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(d?.currentValue)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Cash Balance</span><span className="font-semibold text-gray-900">{cashBalance != null ? formatCurrency(cashBalance) : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
+            </div>
+            <div className="bg-gray-200" />
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Unrealized P&L</span><span className="font-semibold"><PnLText value={d?.unrealizedPnL} format={formatCurrency} />{d?.unrealizedPnLPercentage != null && <span className="text-xs ml-1">(<PnLText value={d.unrealizedPnLPercentage} format={formatPercentage} />)</span>}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Realized P&L</span><span className="font-semibold">{realizedPnL != null ? <PnLText value={realizedPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Total P&L</span><span className="font-semibold">{totalPnL != null ? <PnLText value={totalPnL} format={formatCurrency} /> : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Day Change</span><span className="font-semibold"><PnLText value={s?.dayPnL} format={formatCurrency} />{s?.dayPnLPercentage != null && <span className="text-xs ml-1">(<PnLText value={s.dayPnLPercentage} format={formatPercentage} />)</span>}</span></div>
+            </div>
           </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Mutual Funds</h3>
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Holdings</span><span className="font-semibold text-gray-900">{mf?.length ?? 0} funds</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(mfInvested)}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(mfCurrent)}</span></div>
-            <div className="border-t border-gray-100 my-1" />
-            <div className="flex justify-between text-sm"><span className="text-gray-500">P&L</span><span className="font-semibold"><PnLText value={mfPnL} format={formatCurrency} /><span className="text-xs ml-1">(<PnLText value={mfPnLPct} format={formatPercentage} />)</span></span></div>
+          <div className="grid grid-cols-[1fr_1px_1fr] gap-x-4">
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Holdings</span><span className="font-semibold text-gray-900">{mf?.length ?? 0} funds</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(mfInvested)}</span></div>
+            </div>
+            <div className="bg-gray-200" />
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(mfCurrent)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">P&L</span><span className="font-semibold"><PnLText value={mfPnL} format={formatCurrency} /><span className="text-xs ml-1">(<PnLText value={mfPnLPct} format={formatPercentage} />)</span></span></div>
+            </div>
           </div>
         </div>
 
         {g ? (
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Groww Account</h3>
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Available Cash</span><span className="font-semibold text-gray-900">{formatCurrency(g.availableCash)}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Clear Cash</span><span className="font-semibold text-gray-900">{formatCurrency(g.clearCash)}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Margin Used</span><span className="font-semibold text-gray-900">{formatCurrency(g.marginUsed)}</span></div>
-              <div className="border-t border-gray-100 my-1" />
-              <div className="flex justify-between text-sm"><span className="text-gray-500">UCC</span><span className="font-semibold text-gray-900">{g.ucc}</span></div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">NSE</span>
-                <Badge variant={g.nseEnabled ? 'green' : 'gray'}>{g.nseEnabled ? 'Enabled' : 'Disabled'}</Badge>
+            <div className="grid grid-cols-[1fr_1px_1fr] gap-x-4">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Available Cash</span><span className="font-semibold text-gray-900">{formatCurrency(g.availableCash)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Clear Cash</span><span className="font-semibold text-gray-900">{formatCurrency(g.clearCash)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Margin Used</span><span className="font-semibold text-gray-900">{formatCurrency(g.marginUsed)}</span></div>
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">BSE</span>
-                <Badge variant={g.bseEnabled ? 'green' : 'gray'}>{g.bseEnabled ? 'Enabled' : 'Disabled'}</Badge>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Segments</span>
-                <div className="flex gap-1">{g.activeSegments.map((seg) => <Badge key={seg} variant="blue">{seg}</Badge>)}</div>
+              <div className="bg-gray-200" />
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-sm"><span className="text-gray-500">UCC</span><span className="font-semibold text-gray-900">{g.ucc}</span></div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">NSE</span>
+                  <Badge variant={g.nseEnabled ? 'green' : 'gray'}>{g.nseEnabled ? 'Enabled' : 'Disabled'}</Badge>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">BSE</span>
+                  <Badge variant={g.bseEnabled ? 'green' : 'gray'}>{g.bseEnabled ? 'Enabled' : 'Disabled'}</Badge>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Segments</span>
+                  <div className="flex gap-1">{g.activeSegments.map((seg) => <Badge key={seg} variant="blue">{seg}</Badge>)}</div>
+                </div>
               </div>
             </div>
           </div>
