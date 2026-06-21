@@ -63,8 +63,8 @@ export default function MutualFundsPage() {
               </tr></thead>
               <tbody>
                 {holdings.map((h) => {
-                  const isLoss = h.averageNav != null && h.currentNav != null && h.averageNav < h.currentNav;
-                  const isGain = h.averageNav != null && h.currentNav != null && h.averageNav > h.currentNav;
+                  const isLoss = h.currentNav != null && h.averageNav != null && h.currentNav < h.averageNav;
+                  const isGain = h.currentNav != null && h.averageNav != null && h.currentNav > h.averageNav;
                   const rowClass = isLoss ? 'text-red-600' : isGain ? 'bg-emerald-600 text-white' : '';
                   return (
                     <tr key={h.id} className={`border-b border-gray-100 hover:opacity-80 ${rowClass}`}>
@@ -75,8 +75,8 @@ export default function MutualFundsPage() {
                       <td className="py-2.5 px-3 text-right font-medium">{formatCurrency(h.currentNav)}</td>
                       <td className="py-2.5 px-3 text-right">{formatCurrency(h.investedAmount)}</td>
                       <td className="py-2.5 px-3 text-right">{formatCurrency(h.currentValue)}</td>
-                      <td className="py-2.5 px-3 text-right"><PnLText value={h.pnl} format={formatCurrency} /></td>
-                      <td className="py-2.5 px-3 text-right"><PnLText value={h.pnlPercentage} format={formatPercentage} /></td>
+                      <td className="py-2.5 px-3 text-right">{formatCurrency(h.pnl)}</td>
+                      <td className="py-2.5 px-3 text-right">{formatPercentage(h.pnlPercentage)}</td>
                     </tr>
                   );
                 })}
