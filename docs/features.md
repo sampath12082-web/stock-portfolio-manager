@@ -38,8 +38,7 @@
 - **Top Holdings**: Table of top 5 by current value
 - **Portfolio Value chart**: 30-day area chart from snapshots
 - **Trading Signals**: Latest 5 signals with target prices
-- **Today's Positions**: Groww intraday positions (if any)
-- **Today's Orders**: Groww orders with Executed/All toggle (bottom)
+- **Today's Orders**: Groww orders with Executed/All toggle (bottom of page)
 
 ### 2. Holdings (`/holdings`)
 - **Summary cards**: Total Invested, Current, P&L

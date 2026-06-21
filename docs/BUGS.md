@@ -3,6 +3,7 @@
 ## Open Bugs
 
 | # | Severity | Bug | Root Cause | Status |
+None — all bugs resolved.
 |---|----------|-----|-----------|--------|
 None — all bugs resolved.
 
@@ -31,3 +32,4 @@ None — all bugs resolved.
 | 19 | Medium | No tradeType in data model | Fixed — added TradeType enum (CNC/MIS/UNKNOWN), V14 migration, import auto-detection | 2026-06-20 |
 | 20 | Medium | Sector allocation empty — all stocks have sector=null | Fixed — added POST /api/stocks/refresh-sectors endpoint, filtered allocation to active holdings | 2026-06-20 |
 | 21 | High | Admin panel not accessible for admin login | Fixed — added AdminUsersPage, sidebar link (conditional ROLE_ADMIN), /admin/users route | 2026-06-21 |
+| 22 | Low | Dashboard shows redundant Today's Positions section | Fixed — removed Today's Positions, kept Today's Orders only | 2026-06-22 |

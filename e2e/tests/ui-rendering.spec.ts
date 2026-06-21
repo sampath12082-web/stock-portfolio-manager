@@ -47,8 +47,13 @@ test.describe('UI Rendering — Dashboard', () => {
     await expect(page.getByText('Day Change')).toBeVisible();
   });
 
-  test('dashboard shows Today\'s Positions section', async ({ page }) => {
-    await expect(page.getByText('Today\'s Positions')).toBeVisible({ timeout: 20000 });
+  test('dashboard shows Today\'s Orders section when Groww connected', async ({ page }) => {
+    await page.waitForTimeout(3000);
+    const ordersSection = page.getByText('Today\'s Orders');
+    const growwOnline = await page.getByText('Groww Account').isVisible().catch(() => false);
+    if (growwOnline) {
+      await expect(ordersSection).toBeVisible({ timeout: 10000 });
+    }
   });
 
   test('dashboard shows Sector Allocation', async ({ page }) => {
