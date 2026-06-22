@@ -19,7 +19,11 @@ public class AdminUserSeeder implements ApplicationRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private String adminDefaultPassword = "Admin@1234567890*";
+    @Value("${admin.email:sampath12082@gmail.com}")
+    private String adminEmail;
+
+    @Value("${admin.default-password:Admin@1234567890*}")
+    private String adminDefaultPassword;
 
     public AdminUserSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -28,26 +32,19 @@ public class AdminUserSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        var existing = userRepository.findByEmail("sampath12082@gmail.com");
-        if (existing.isPresent()) {
-            User admin = existing.get();
-            admin.setPasswordHash(passwordEncoder.encode(adminDefaultPassword));
-            admin.setEmailVerified(true);
-            userRepository.save(admin);
-            log.debug("Admin user credentials refreshed");
+        if (userRepository.findByEmail(adminEmail).isPresent()) {
             return;
         }
 
         User admin = new User();
-        admin.setEmail("sampath12082@gmail.com");
+        admin.setEmail(adminEmail);
         admin.setPasswordHash(passwordEncoder.encode(adminDefaultPassword));
-        admin.setFirstName("Sampat Kumar");
-        admin.setLastName("Asealu");
+        admin.setFirstName("Admin");
         admin.setRole("ROLE_ADMIN");
         admin.setStatus("ACTIVE");
         admin.setEmailVerified(true);
 
         userRepository.save(admin);
-        log.info("Admin user created: sampath12082@gmail.com");
+        log.info("Admin user created: {}", adminEmail);
     }
 }
