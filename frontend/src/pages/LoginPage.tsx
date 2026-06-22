@@ -18,7 +18,8 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const resp = await axios.post<AuthResponse>('/api/auth/login', { email, password });
+      const encryptedPassword = await encryptField(password);
+      const resp = await axios.post<AuthResponse>('/api/auth/login', { email, password: encryptedPassword });
       login(resp.data.accessToken, resp.data.refreshToken, resp.data.user);
       navigate('/');
     } catch (err: unknown) {

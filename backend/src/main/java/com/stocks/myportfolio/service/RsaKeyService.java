@@ -1,9 +1,12 @@
 package com.stocks.myportfolio.service;
 
 import java.security.*;
+import java.security.spec.MGF1ParameterSpec;
 import java.util.Base64;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,12 +41,13 @@ public class RsaKeyService {
 
     public String decrypt(String encryptedBase64) {
         try {
-            Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
-            cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
+            Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPPadding");
+            OAEPParameterSpec oaepParams = new OAEPParameterSpec(
+                    "SHA-256", "MGF1", MGF1ParameterSpec.SHA256, PSource.PSpecified.DEFAULT);
+            cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate(), oaepParams);
             byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(encryptedBase64));
             return new String(decrypted);
         } catch (Exception e) {
-            // If decryption fails, assume plain text (for backward compatibility)
             return encryptedBase64;
         }
     }
