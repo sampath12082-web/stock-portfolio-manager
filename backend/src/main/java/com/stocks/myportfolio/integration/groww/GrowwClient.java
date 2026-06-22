@@ -24,7 +24,6 @@ import com.stocks.myportfolio.common.exception.MarketDataException;
 import com.stocks.myportfolio.entity.UserGrowwConfig;
 import com.stocks.myportfolio.repository.UserGrowwConfigRepository;
 import com.stocks.myportfolio.security.CurrentUserProvider;
-import com.stocks.myportfolio.service.RsaKeyService;
 
 @Component
 @ConditionalOnProperty(name = "groww.api.enabled", havingValue = "true")
@@ -35,17 +34,15 @@ public class GrowwClient {
     private final GrowwProperties properties;
     private final UserGrowwConfigRepository growwConfigRepo;
     private final CurrentUserProvider currentUser;
-    private final RsaKeyService rsaKeyService;
 
     private record SessionEntry(String token, long expiresAt) {}
     private final ConcurrentHashMap<Long, SessionEntry> userSessions = new ConcurrentHashMap<>();
 
     public GrowwClient(GrowwProperties properties, UserGrowwConfigRepository growwConfigRepo,
-            CurrentUserProvider currentUser, RsaKeyService rsaKeyService) {
+            CurrentUserProvider currentUser) {
         this.properties = properties;
         this.growwConfigRepo = growwConfigRepo;
         this.currentUser = currentUser;
-        this.rsaKeyService = rsaKeyService;
     }
 
     private UserGrowwConfig getUserConfig() {
@@ -53,15 +50,6 @@ public class GrowwClient {
         if (userId == null) throw new MarketDataException("Not authenticated");
         return growwConfigRepo.findByUserId(userId)
                 .orElseThrow(() -> new MarketDataException("Groww not configured. Set credentials in Profile → Groww Config."));
-    }
-
-    private String decryptValue(String encrypted) {
-        if (encrypted == null || encrypted.isBlank()) return null;
-        try {
-            return rsaKeyService.decrypt(encrypted);
-        } catch (Exception e) {
-            return encrypted;
-        }
     }
 
     public GrowwStockResponse getQuote(String tradingSymbol, String exchange) {
@@ -228,8 +216,8 @@ public class GrowwClient {
             return cached.token();
         }
 
-        String accessToken = decryptValue(config.getAccessTokenEncrypted());
-        String apiSecret = decryptValue(config.getApiSecretEncrypted());
+        String accessToken = config.getAccessTokenEncrypted();
+        String apiSecret = config.getApiSecretEncrypted();
 
         if (accessToken == null || apiSecret == null) {
             throw new MarketDataException("Groww credentials incomplete. Update in Profile → Groww Config.");

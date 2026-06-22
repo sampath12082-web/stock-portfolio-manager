@@ -11,6 +11,7 @@ import com.stocks.myportfolio.entity.User;
 import com.stocks.myportfolio.entity.UserGrowwConfig;
 import com.stocks.myportfolio.repository.UserGrowwConfigRepository;
 import com.stocks.myportfolio.repository.UserRepository;
+import com.stocks.myportfolio.service.RsaKeyService;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -18,10 +19,18 @@ public class ProfileController {
 
     private final UserRepository userRepository;
     private final UserGrowwConfigRepository growwConfigRepository;
+    private final RsaKeyService rsaKeyService;
 
-    public ProfileController(UserRepository userRepository, UserGrowwConfigRepository growwConfigRepository) {
+    public ProfileController(UserRepository userRepository, UserGrowwConfigRepository growwConfigRepository,
+            RsaKeyService rsaKeyService) {
         this.userRepository = userRepository;
         this.growwConfigRepository = growwConfigRepository;
+        this.rsaKeyService = rsaKeyService;
+    }
+
+    private String decryptIfNeeded(String value) {
+        if (value == null || value.isBlank()) return value;
+        try { return rsaKeyService.decrypt(value); } catch (Exception e) { return value; }
     }
 
     @GetMapping
@@ -59,8 +68,8 @@ public class ProfileController {
             c.setUser(user);
             return c;
         });
-        if (body.containsKey("accessToken")) config.setAccessTokenEncrypted(body.get("accessToken"));
-        if (body.containsKey("apiSecret")) config.setApiSecretEncrypted(body.get("apiSecret"));
+        if (body.containsKey("accessToken")) config.setAccessTokenEncrypted(decryptIfNeeded(body.get("accessToken")));
+        if (body.containsKey("apiSecret")) config.setApiSecretEncrypted(decryptIfNeeded(body.get("apiSecret")));
         if (body.containsKey("enabled")) config.setEnabled(Boolean.parseBoolean(body.get("enabled")));
         boolean hasCreds = config.getAccessTokenEncrypted() != null && !config.getAccessTokenEncrypted().isBlank()
                 && config.getApiSecretEncrypted() != null && !config.getApiSecretEncrypted().isBlank();
