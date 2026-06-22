@@ -227,12 +227,41 @@ export default function HoldingsPage() {
                       {sig ? <Badge variant={signalBadge[sig.type]}>{sig.type.replace('_', ' ')}</Badge> : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="py-2.5 px-3">
-                      <button onClick={() => setEditing(h)} className="text-[#D85A30] hover:text-[#D85A30] text-xs">Edit</button>
+                      <button onClick={() => setEditing(h)} className="text-[#D85A30] hover:text-[#C04E28] text-xs">Edit</button>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
+            <tfoot>
+              {(() => {
+                let tQty = 0, tInvested = 0, tCurrent = 0, tRealized = 0, tUnrealized = 0;
+                let hasRealized = false, hasUnrealized = false;
+                filteredHoldings.forEach((h) => {
+                  tQty += h.quantity;
+                  tInvested += h.investedAmount;
+                  tCurrent += h.currentValue ?? 0;
+                  const pnl = holdingPnlMap.get(h.symbol);
+                  if (pnl?.realizedPnL != null) { tRealized += pnl.realizedPnL; hasRealized = true; }
+                  if (pnl?.unrealizedPnL != null) { tUnrealized += pnl.unrealizedPnL; hasUnrealized = true; }
+                });
+                return (
+                  <tr className="bg-[#F1EFE8] border-t-2 border-[#D3D1C7] font-semibold text-[#2C2C2A]">
+                    <td className="py-3 px-3">Total ({filteredHoldings.length})</td>
+                    <td className="py-3 px-3 text-right">{tQty.toLocaleString('en-IN')}</td>
+                    <td className="py-3 px-3"></td>
+                    <td className="py-3 px-3"></td>
+                    <td className="py-3 px-3"></td>
+                    <td className="py-3 px-3 text-right">{formatCurrency(tInvested)}</td>
+                    <td className="py-3 px-3 text-right">{formatCurrency(tCurrent)}</td>
+                    <td className="py-3 px-3 text-right">{hasRealized ? <PnLText value={tRealized} format={formatCurrency} /> : <span className="text-gray-300">—</span>}</td>
+                    <td className="py-3 px-3 text-right">{hasUnrealized ? <PnLText value={tUnrealized} format={formatCurrency} /> : <span className="text-gray-300">—</span>}</td>
+                    <td className="py-3 px-3"></td>
+                    <td className="py-3 px-3"></td>
+                  </tr>
+                );
+              })()}
+            </tfoot>
           </table>
         </div>
       ) : (

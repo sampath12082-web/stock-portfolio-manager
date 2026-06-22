@@ -10,7 +10,7 @@ test.describe('Smoke Tests — App loads and API health', () => {
 
   test('auth endpoint is accessible (login returns 200)', async ({ request }) => {
     const resp = await request.post('/api/auth/login', {
-      data: { email: 'sampath12082@gmail.com', password: 'Admin@123' },
+      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*' },
     });
     expect(resp.status()).toBe(200);
   });

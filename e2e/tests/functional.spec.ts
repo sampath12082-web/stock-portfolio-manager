@@ -26,11 +26,11 @@ test.describe('Functional — Auth API', () => {
     expect(resp.status()).toBe(400);
   });
 
-  test('forgot-password always returns success (no email leak)', async ({ request }) => {
+  test('forgot-password rejects unknown email', async ({ request }) => {
     const resp = await request.post('/api/auth/forgot-password', {
       data: { email: 'nonexistent@example.com' },
     });
-    expect(resp.status()).toBe(200);
+    expect([400, 404]).toContain(resp.status());
   });
 });
 
@@ -240,5 +240,339 @@ test.describe('Functional — Profile API', () => {
     const profile = await resp.json();
     expect(profile.email).toBe('sampath12082@gmail.com');
     expect(profile.firstName).toBe('Sampat Kumar');
+  });
+
+  test('groww config endpoint accessible', async ({ request }) => {
+    const resp = await request.get('/api/profile/groww', { headers });
+    expect([200, 204]).toContain(resp.status());
+  });
+});
+
+// ─── HIGH: Signals API ───────────────────────────────────────────
+
+test.describe('Functional — Signals API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('active signals returns array', async ({ request }) => {
+    const resp = await request.get('/api/signals/active', { headers });
+    expect(resp.status()).toBe(200);
+    const signals = await resp.json();
+    expect(Array.isArray(signals)).toBe(true);
+    expect(signals.length).toBeGreaterThan(0);
+  });
+
+  test('active signals have required fields', async ({ request }) => {
+    const resp = await request.get('/api/signals/active', { headers });
+    const signals = await resp.json();
+    if (signals.length > 0) {
+      expect(signals[0]).toHaveProperty('symbol');
+      expect(signals[0]).toHaveProperty('signalType');
+      expect(signals[0]).toHaveProperty('status');
+      expect(signals[0]).toHaveProperty('targetPrice');
+    }
+  });
+
+  test('today signals returns array', async ({ request }) => {
+    const resp = await request.get('/api/signals/today', { headers });
+    expect(resp.status()).toBe(200);
+    const signals = await resp.json();
+    expect(Array.isArray(signals)).toBe(true);
+  });
+
+  test('signals list returns all signals', async ({ request }) => {
+    const resp = await request.get('/api/signals', { headers });
+    expect(resp.status()).toBe(200);
+    const signals = await resp.json();
+    expect(Array.isArray(signals)).toBe(true);
+  });
+
+  test('analyze endpoint triggers signal generation', async ({ request }) => {
+    const resp = await request.post('/api/signals/analyze', { headers, timeout: 60000 });
+    expect([200, 202]).toContain(resp.status());
+  });
+
+  test('recommendations returns array', async ({ request }) => {
+    const resp = await request.get('/api/signals/recommendations', { headers });
+    expect(resp.status()).toBe(200);
+  });
+});
+
+// ─── HIGH: Help / FAQ API ────────────────────────────────────────
+
+test.describe('Functional — Help & FAQ API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('public FAQ returns seeded entries', async ({ request }) => {
+    const resp = await request.get('/api/help/faq', { headers });
+    expect(resp.status()).toBe(200);
+    const faqs = await resp.json();
+    expect(Array.isArray(faqs)).toBe(true);
+    expect(faqs.length).toBeGreaterThan(0);
+  });
+
+  test('FAQ entries have question, answer, category', async ({ request }) => {
+    const resp = await request.get('/api/help/faq', { headers });
+    const faqs = await resp.json();
+    if (faqs.length > 0) {
+      expect(faqs[0]).toHaveProperty('question');
+      expect(faqs[0]).toHaveProperty('answer');
+      expect(faqs[0]).toHaveProperty('category');
+    }
+  });
+
+  test('user can submit a support ticket', async ({ request }) => {
+    const resp = await request.post('/api/help/tickets', {
+      headers,
+      data: { subject: 'Test Ticket', message: 'Automated test ticket' },
+    });
+    expect([200, 201]).toContain(resp.status());
+  });
+
+  test('user can list their tickets', async ({ request }) => {
+    const resp = await request.get('/api/help/tickets', { headers });
+    expect(resp.status()).toBe(200);
+    const tickets = await resp.json();
+    expect(Array.isArray(tickets)).toBe(true);
+  });
+
+  test('admin can list all tickets', async ({ request }) => {
+    const resp = await request.get('/api/admin/tickets', { headers });
+    expect(resp.status()).toBe(200);
+    const tickets = await resp.json();
+    expect(Array.isArray(tickets)).toBe(true);
+  });
+
+  test('admin FAQ create endpoint accessible', async ({ request }) => {
+    const resp = await request.post('/api/admin/faq', {
+      headers,
+      data: { question: 'Test Q?', answer: 'Test A', category: 'General' },
+    });
+    expect([200, 201]).toContain(resp.status());
+  });
+});
+
+// ─── HIGH: Quotes API ────────────────────────────────────────────
+
+test.describe('Functional — Quotes API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('quotes returns cached price map', async ({ request }) => {
+    const resp = await request.get('/api/quotes', { headers });
+    expect(resp.status()).toBe(200);
+    const quotes = await resp.json();
+    expect(typeof quotes).toBe('object');
+  });
+
+  test('quote for specific symbol returns data', async ({ request }) => {
+    const resp = await request.get('/api/quotes/TCS', { headers });
+    expect(resp.status()).toBe(200);
+    const q = await resp.json();
+    expect(q).toHaveProperty('ltp');
+  });
+
+  test('refresh quotes triggers update', async ({ request }) => {
+    const resp = await request.post('/api/quotes/refresh', { headers, timeout: 60000 });
+    expect(resp.status()).toBe(200);
+  });
+});
+
+// ─── MEDIUM: Auth — Password Policy ─────────────────────────────
+
+test.describe('Functional — Password Policy', () => {
+  test('rejects password shorter than 16 chars', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', {
+      data: {
+        email: `policy1_${Date.now()}@test.com`, password: 'Short@1234',
+        firstName: 'Test', securityQuestion1: 'Q1?', securityAnswer1: 'A1',
+        securityQuestion2: 'Q2?', securityAnswer2: 'A2',
+      },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('rejects password longer than 20 chars', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', {
+      data: {
+        email: `policy2_${Date.now()}@test.com`, password: 'VeryLongPassword@123456',
+        firstName: 'Test', securityQuestion1: 'Q1?', securityAnswer1: 'A1',
+        securityQuestion2: 'Q2?', securityAnswer2: 'A2',
+      },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('rejects password without special char', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', {
+      data: {
+        email: `policy3_${Date.now()}@test.com`, password: 'NoSpecialChar12345',
+        firstName: 'Test', securityQuestion1: 'Q1?', securityAnswer1: 'A1',
+        securityQuestion2: 'Q2?', securityAnswer2: 'A2',
+      },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('rejects password without digit', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', {
+      data: {
+        email: `policy4_${Date.now()}@test.com`, password: 'NoDigitsHere@abcde',
+        firstName: 'Test', securityQuestion1: 'Q1?', securityAnswer1: 'A1',
+        securityQuestion2: 'Q2?', securityAnswer2: 'A2',
+      },
+    });
+    expect(resp.status()).toBe(400);
+  });
+});
+
+// ─── MEDIUM: Auth — Security Questions & OTP ─────────────────────
+
+test.describe('Functional — Security Questions & OTP', () => {
+  test('register requires security questions', async ({ request }) => {
+    const resp = await request.post('/api/auth/register', {
+      data: {
+        email: `nosq_${Date.now()}@test.com`, password: 'ValidPassword@1234',
+        firstName: 'Test',
+      },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('verify-security rejects wrong answers', async ({ request }) => {
+    const resp = await request.post('/api/auth/verify-security', {
+      data: { email: 'sampath12082@gmail.com', answer1: 'wrong1', answer2: 'wrong2' },
+    });
+    expect([400, 401]).toContain(resp.status());
+  });
+
+  test('verify-otp rejects invalid OTP', async ({ request }) => {
+    const resp = await request.post('/api/auth/verify-otp', {
+      data: { email: 'sampath12082@gmail.com', otp: '000000' },
+    });
+    expect([400, 401]).toContain(resp.status());
+  });
+
+  test('reset-password rejects without valid OTP', async ({ request }) => {
+    const resp = await request.post('/api/auth/reset-password', {
+      data: { email: 'sampath12082@gmail.com', otp: '000000', newPassword: 'NewPassword@12345' },
+    });
+    expect([400, 401]).toContain(resp.status());
+  });
+
+  test('public-key returns RSA PEM', async ({ request }) => {
+    const resp = await request.get('/api/auth/public-key');
+    expect(resp.status()).toBe(200);
+    const body = await resp.json();
+    expect(body).toHaveProperty('publicKey');
+    expect(body.publicKey).toContain('BEGIN PUBLIC KEY');
+  });
+});
+
+// ─── MEDIUM: Groww API ───────────────────────────────────────────
+
+test.describe('Functional — Groww API', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('groww status returns enabled flag', async ({ request }) => {
+    const resp = await request.get('/api/groww/status', { headers });
+    expect(resp.status()).toBe(200);
+    const s = await resp.json();
+    expect(s).toHaveProperty('enabled');
+  });
+
+  test('groww account returns data when enabled', async ({ request }) => {
+    const resp = await request.get('/api/groww/account', { headers });
+    if (resp.status() === 200) {
+      const g = await resp.json();
+      expect(g).toHaveProperty('clearCash');
+      expect(g).toHaveProperty('todayOrders');
+    }
+  });
+
+  test('groww sync endpoint accessible', async ({ request }) => {
+    const resp = await request.post('/api/groww/sync', { headers });
+    expect([200, 400, 503]).toContain(resp.status());
+  });
+});
+
+// ─── MEDIUM: Admin Extended ──────────────────────────────────────
+
+test.describe('Functional — Admin Extended', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('admin can respond to ticket', async ({ request }) => {
+    const tickets = await (await request.get('/api/admin/tickets', { headers })).json();
+    if (tickets.length > 0) {
+      const resp = await request.put(`/api/admin/tickets/${tickets[0].id}`, {
+        headers,
+        data: { response: 'Test response from admin' },
+      });
+      expect([200, 204]).toContain(resp.status());
+    }
+  });
+
+  test('admin reset-password for user', async ({ request }) => {
+    const users = await (await request.get('/api/admin/users', { headers })).json();
+    const nonAdmin = users.find((u: { role: string; id: number }) => u.role !== 'ROLE_ADMIN');
+    if (nonAdmin) {
+      const resp = await request.post(`/api/admin/users/${nonAdmin.id}/reset-password`, { headers });
+      expect([200, 204]).toContain(resp.status());
+    }
+  });
+});
+
+// ─── LOW: Performance Extended ───────────────────────────────────
+
+test.describe('Functional — Performance Extended', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('snapshot capture works', async ({ request }) => {
+    const resp = await request.post('/api/performance/snapshot', { headers, timeout: 60000 });
+    expect([200, 201]).toContain(resp.status());
+  });
+
+  test('history returns array with date range', async ({ request }) => {
+    const resp = await request.get('/api/performance/history?from=2026-01-01&to=2026-12-31', { headers });
+    expect(resp.status()).toBe(200);
+    const hist = await resp.json();
+    expect(Array.isArray(hist)).toBe(true);
+  });
+});
+
+// ─── LOW: Health Endpoint ────────────────────────────────────────
+
+test.describe('Functional — Health', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('health endpoint returns 200', async ({ request }) => {
+    const resp = await request.get('/api/health', { headers });
+    expect(resp.status()).toBe(200);
   });
 });

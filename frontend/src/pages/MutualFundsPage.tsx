@@ -81,6 +81,19 @@ export default function MutualFundsPage() {
                   );
                 })}
               </tbody>
+              <tfoot>
+                <tr className="bg-[#F1EFE8] border-t-2 border-[#D3D1C7] font-semibold text-[#2C2C2A]">
+                  <td className="py-3 px-3">Total ({holdings.length})</td>
+                  <td className="py-3 px-3"></td>
+                  <td className="py-3 px-3 text-right">{formatNumber(holdings.reduce((s, h) => s + h.units, 0))}</td>
+                  <td className="py-3 px-3"></td>
+                  <td className="py-3 px-3"></td>
+                  <td className="py-3 px-3 text-right">{formatCurrency(totalInvested)}</td>
+                  <td className="py-3 px-3 text-right">{formatCurrency(totalCurrent)}</td>
+                  <td className="py-3 px-3 text-right"><PnLText value={totalPnL} format={formatCurrency} /></td>
+                  <td className="py-3 px-3 text-right">{totalInvested > 0 ? <PnLText value={(totalPnL / totalInvested) * 100} format={formatPercentage} /> : '—'}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         ) : <EmptyState message="No mutual fund holdings yet" action={<button onClick={() => setShowAddFund(true)} className="text-[#D85A30] text-sm">Add your first fund</button>} />}

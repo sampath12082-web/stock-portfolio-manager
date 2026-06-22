@@ -43,7 +43,7 @@ test.describe('UI Rendering — Dashboard', () => {
   test('Portfolio section shows P&L fields', async ({ page }) => {
     await expect(page.getByText('Deposited')).toBeVisible({ timeout: 20000 });
     await expect(page.getByText('Unrealized P&L').first()).toBeVisible();
-    await expect(page.getByText('Realized P&L')).toBeVisible();
+    await expect(page.getByText('Realized P&L', { exact: true })).toBeVisible();
     await expect(page.getByText('Day Change')).toBeVisible();
   });
 
