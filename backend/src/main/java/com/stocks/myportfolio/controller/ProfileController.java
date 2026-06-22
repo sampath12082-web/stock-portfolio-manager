@@ -62,6 +62,9 @@ public class ProfileController {
         if (body.containsKey("accessToken")) config.setAccessTokenEncrypted(body.get("accessToken"));
         if (body.containsKey("apiSecret")) config.setApiSecretEncrypted(body.get("apiSecret"));
         if (body.containsKey("enabled")) config.setEnabled(Boolean.parseBoolean(body.get("enabled")));
+        boolean hasCreds = config.getAccessTokenEncrypted() != null && !config.getAccessTokenEncrypted().isBlank()
+                && config.getApiSecretEncrypted() != null && !config.getApiSecretEncrypted().isBlank();
+        config.setEnabled(hasCreds);
         growwConfigRepository.save(config);
         return Map.of("message", "Groww config updated", "enabled", config.isEnabled());
     }

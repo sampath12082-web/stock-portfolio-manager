@@ -46,4 +46,4 @@ groww:
   api:
     base-url: https://api.groww.in
     api-version: "1.0"
-    enabled: ${GROWW_API_ENABLED:false}
+    enabled: ${GROWW_API_ENABLED:true}
