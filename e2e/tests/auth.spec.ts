@@ -174,8 +174,41 @@ test.describe('Auth — Change Password', () => {
     const { accessToken } = await login.json();
     const resp = await request.post('/api/auth/change-password', {
       headers: { Authorization: `Bearer ${accessToken}` },
-      data: { currentPassword: 'WrongPassword', newPassword: 'NewPass@123' },
+      data: { currentPassword: 'WrongPassword@12345', newPassword: 'NewPass@1234567890' },
     });
     expect(resp.status()).toBe(400);
+  });
+
+  test('change password succeeds with correct current password', async ({ request }) => {
+    const login = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    const { accessToken } = await login.json();
+    const resp = await request.post('/api/auth/change-password', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { currentPassword: ADMIN_PASSWORD, newPassword: ADMIN_PASSWORD },
+    });
+    expect(resp.status()).toBe(200);
+    const body = await resp.json();
+    expect(body.message).toContain('Password changed');
+  });
+
+  test('change password rejects short password', async ({ request }) => {
+    const login = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    const { accessToken } = await login.json();
+    const resp = await request.post('/api/auth/change-password', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { currentPassword: ADMIN_PASSWORD, newPassword: 'Short@1234' },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('login still works after change password', async ({ request }) => {
+    const resp = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    expect(resp.status()).toBe(200);
   });
 });

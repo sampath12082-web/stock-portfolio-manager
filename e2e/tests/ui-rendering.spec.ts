@@ -147,10 +147,12 @@ test.describe('UI Rendering — Page Navigation', () => {
     await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
   });
 
-  test('profile page renders form', async ({ page }) => {
+  test('profile page renders all sections', async ({ page }) => {
     await page.click('text=Sampat Kumar');
     await expect(page.locator('h1')).toContainText('Profile');
     await expect(page.getByText('Personal Details')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('heading', { name: 'Change Password' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Groww Config' })).toBeVisible();
   });
 
   test('performance page renders chart and snapshot', async ({ page }) => {
