@@ -45,7 +45,11 @@ public class AuthServiceImpl implements AuthService {
 
     private String decryptIfEncrypted(String value) {
         if (value == null) return null;
-        return rsaKeyService.decrypt(value);
+        try {
+            return rsaKeyService.decrypt(value);
+        } catch (Exception e) {
+            return value;
+        }
     }
 
     private static final java.util.regex.Pattern PASSWORD_PATTERN =
