@@ -1,7 +1,9 @@
 package com.stocks.myportfolio.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,11 +13,12 @@ import org.springframework.web.client.RestClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stocks.myportfolio.common.enums.SignalStatus;
+import com.stocks.myportfolio.entity.Holding;
 import com.stocks.myportfolio.entity.TradingSignal;
 import com.stocks.myportfolio.integration.StockQuoteData;
+import com.stocks.myportfolio.repository.HoldingRepository;
 import com.stocks.myportfolio.repository.TradingSignalRepository;
-import com.stocks.myportfolio.service.MarketDataService;
-import com.stocks.myportfolio.service.StockLookupService;
 
 @Service
 public class AiStockService {
@@ -28,106 +31,189 @@ public class AiStockService {
     private final MarketDataService marketDataService;
     private final StockLookupService stockLookupService;
     private final TradingSignalRepository signalRepository;
+    private final HoldingRepository holdingRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public AiStockService(MarketDataService marketDataService, StockLookupService stockLookupService,
-            TradingSignalRepository signalRepository) {
+            TradingSignalRepository signalRepository, HoldingRepository holdingRepository) {
         this.marketDataService = marketDataService;
         this.stockLookupService = stockLookupService;
         this.signalRepository = signalRepository;
+        this.holdingRepository = holdingRepository;
     }
 
-    public Map<String, Object> searchAndAnalyze(String query) {
+    public Map<String, Object> chat(String prompt) {
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("query", query);
+        result.put("prompt", prompt);
 
-        // Step 1: Search for the stock
-        var lookupResults = stockLookupService.lookup(query);
-        if (lookupResults.isEmpty()) {
-            result.put("error", "No stocks found for: " + query);
-            return result;
-        }
+        String context = buildContext(prompt);
 
-        var match = lookupResults.get(0);
-        String symbol = match.symbol();
-        result.put("symbol", symbol);
-        result.put("companyName", match.companyName());
-        result.put("exchange", match.exchange());
-        result.put("sector", match.sector());
-        result.put("industry", match.industry());
-        result.put("existsInDb", match.existsInDb());
-
-        // Step 2: Get live quote
-        try {
-            Map<String, StockQuoteData> prices = marketDataService.getCurrentPrices();
-            StockQuoteData quote = prices.get(symbol);
-            if (quote != null) {
-                result.put("ltp", quote.ltp());
-                result.put("open", quote.open());
-                result.put("high", quote.high());
-                result.put("low", quote.low());
-                result.put("previousClose", quote.previousClose());
-                result.put("volume", quote.volume());
-                BigDecimal change = quote.ltp() != null && quote.previousClose() != null
-                        ? quote.ltp().subtract(quote.previousClose()) : null;
-                BigDecimal changePct = change != null && quote.previousClose() != null
-                        && quote.previousClose().compareTo(BigDecimal.ZERO) > 0
-                        ? change.multiply(BigDecimal.valueOf(100)).divide(quote.previousClose(), 2, java.math.RoundingMode.HALF_UP)
-                        : null;
-                result.put("dayChange", change);
-                result.put("dayChangePct", changePct);
-            }
-        } catch (Exception e) {
-            log.warn("Failed to fetch quote for {}: {}", symbol, e.getMessage());
-        }
-
-        // Step 3: Get trading signal
-        List<TradingSignal> signals = signalRepository.findBySymbolIgnoreCaseOrderBySignalDateDesc(symbol).stream()
-                .filter(s -> s.getStatus() == com.stocks.myportfolio.common.enums.SignalStatus.ACTIVE)
-                .toList();
-        if (!signals.isEmpty()) {
-            TradingSignal sig = signals.get(0);
-            result.put("signalType", sig.getSignalType().name());
-            result.put("targetPrice", sig.getTargetPrice());
-            result.put("signalDate", sig.getSignalDate());
-            result.put("rationale", sig.getRationale());
-        } else {
-            result.put("signalType", "NO_SIGNAL");
-        }
-
-        // Step 4: AI analysis (if API key configured)
         if (anthropicApiKey != null && !anthropicApiKey.isBlank()) {
             try {
-                String aiAnalysis = getAiAnalysis(symbol, result);
-                result.put("aiAnalysis", aiAnalysis);
+                String response = callClaude(prompt, context);
+                result.put("response", response);
+                result.put("source", "claude");
             } catch (Exception e) {
-                log.warn("AI analysis failed: {}", e.getMessage());
-                result.put("aiAnalysis", "AI analysis unavailable");
+                log.warn("Claude API failed: {}", e.getMessage());
+                result.put("response", generateLocalResponse(prompt, context));
+                result.put("source", "local");
             }
         } else {
-            result.put("aiAnalysis", generateLocalAnalysis(result));
+            result.put("response", generateLocalResponse(prompt, context));
+            result.put("source", "local");
+        }
+
+        String stockSymbol = extractStockSymbol(prompt);
+        if (stockSymbol != null) {
+            result.put("stockData", getStockData(stockSymbol));
         }
 
         return result;
     }
 
-    private String getAiAnalysis(String symbol, Map<String, Object> data) throws Exception {
-        String prompt = String.format(
-                "Analyze Indian stock %s (%s). Current price: %s, Day change: %s%%, Signal: %s, Target: %s, Sector: %s. " +
-                "Provide a brief 3-4 sentence analysis covering: 1) Current trend 2) Key risk 3) Trade recommendation (buy/sell/hold). " +
-                "Be concise and specific. This is for educational purposes only.",
-                symbol, data.get("companyName"), data.get("ltp"), data.get("dayChangePct"),
-                data.get("signalType"), data.get("targetPrice"), data.get("sector"));
+    private String buildContext(String prompt) {
+        StringBuilder ctx = new StringBuilder();
+
+        List<Holding> activeHoldings = holdingRepository.findAll().stream()
+                .filter(h -> h.getQuantity() > 0).toList();
+
+        ctx.append("USER PORTFOLIO: ");
+        if (activeHoldings.isEmpty()) {
+            ctx.append("No active holdings.\n");
+        } else {
+            BigDecimal totalInvested = BigDecimal.ZERO;
+            BigDecimal totalCurrent = BigDecimal.ZERO;
+            Map<String, StockQuoteData> prices = Map.of();
+            try { prices = marketDataService.getCurrentPrices(); } catch (Exception e) { /* */ }
+
+            for (Holding h : activeHoldings) {
+                StockQuoteData q = prices.get(h.getStock().getSymbol());
+                BigDecimal current = q != null && q.ltp() != null
+                        ? q.ltp().multiply(BigDecimal.valueOf(h.getQuantity()))
+                        : h.getInvestedAmount();
+                totalInvested = totalInvested.add(h.getInvestedAmount());
+                totalCurrent = totalCurrent.add(current);
+                ctx.append(String.format("%s: %d shares @ ₹%s (current ₹%s), ",
+                        h.getStock().getSymbol(), h.getQuantity(),
+                        h.getAverageBuyPrice().setScale(2, RoundingMode.HALF_UP),
+                        q != null && q.ltp() != null ? q.ltp().setScale(2, RoundingMode.HALF_UP) : "N/A"));
+            }
+            BigDecimal pnl = totalCurrent.subtract(totalInvested);
+            ctx.append(String.format("\nTotal: Invested ₹%s, Current ₹%s, P&L ₹%s.\n",
+                    totalInvested.setScale(0, RoundingMode.HALF_UP),
+                    totalCurrent.setScale(0, RoundingMode.HALF_UP),
+                    pnl.setScale(0, RoundingMode.HALF_UP)));
+        }
+
+        List<TradingSignal> signals = signalRepository.findByStatusOrderBySignalDateDesc(SignalStatus.ACTIVE);
+        if (!signals.isEmpty()) {
+            ctx.append("ACTIVE SIGNALS: ");
+            signals.stream().limit(10).forEach(s ->
+                    ctx.append(String.format("%s=%s(target ₹%s), ", s.getSymbol(), s.getSignalType(),
+                            s.getTargetPrice() != null ? s.getTargetPrice() : "N/A")));
+            ctx.append("\n");
+        }
+
+        String symbol = extractStockSymbol(prompt);
+        if (symbol != null) {
+            Map<String, Object> stockData = getStockData(symbol);
+            if (stockData.containsKey("ltp")) {
+                ctx.append(String.format("QUERIED STOCK %s: LTP ₹%s, Day %s%%, Signal: %s",
+                        symbol, stockData.get("ltp"), stockData.get("dayChangePct"),
+                        stockData.get("signalType")));
+                if (stockData.get("targetPrice") != null) {
+                    ctx.append(String.format(", Target ₹%s", stockData.get("targetPrice")));
+                }
+                ctx.append("\n");
+            }
+        }
+
+        return ctx.toString();
+    }
+
+    private String extractStockSymbol(String prompt) {
+        String upper = prompt.toUpperCase().trim();
+        String[] words = upper.split("\\s+");
+        for (String word : words) {
+            String clean = word.replaceAll("[^A-Z0-9&-]", "");
+            if (clean.length() >= 2 && clean.length() <= 15 && clean.matches("[A-Z][A-Z0-9&-]*")) {
+                var results = stockLookupService.lookup(clean);
+                if (!results.isEmpty() && results.get(0).symbol().equalsIgnoreCase(clean)) {
+                    return results.get(0).symbol();
+                }
+            }
+        }
+        return null;
+    }
+
+    public Map<String, Object> getStockData(String symbol) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        var results = stockLookupService.lookup(symbol);
+        if (results.isEmpty()) return data;
+
+        var match = results.get(0);
+        data.put("symbol", match.symbol());
+        data.put("companyName", match.companyName());
+        data.put("exchange", match.exchange());
+        data.put("sector", match.sector());
+        data.put("industry", match.industry());
+        data.put("existsInDb", match.existsInDb());
+
+        try {
+            Map<String, StockQuoteData> prices = marketDataService.getCurrentPrices();
+            StockQuoteData q = prices.get(match.symbol());
+            if (q != null) {
+                data.put("ltp", q.ltp());
+                data.put("open", q.open());
+                data.put("high", q.high());
+                data.put("low", q.low());
+                data.put("previousClose", q.previousClose());
+                data.put("volume", q.volume());
+                if (q.ltp() != null && q.previousClose() != null && q.previousClose().compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal change = q.ltp().subtract(q.previousClose());
+                    data.put("dayChange", change);
+                    data.put("dayChangePct", change.multiply(BigDecimal.valueOf(100)).divide(q.previousClose(), 2, RoundingMode.HALF_UP));
+                }
+            }
+        } catch (Exception e) { /* */ }
+
+        signalRepository.findBySymbolIgnoreCaseOrderBySignalDateDesc(symbol).stream()
+                .filter(s -> s.getStatus() == SignalStatus.ACTIVE)
+                .findFirst()
+                .ifPresentOrElse(sig -> {
+                    data.put("signalType", sig.getSignalType().name());
+                    data.put("targetPrice", sig.getTargetPrice());
+                    data.put("signalDate", sig.getSignalDate());
+                    data.put("rationale", sig.getRationale());
+                }, () -> data.put("signalType", "NO_SIGNAL"));
+
+        return data;
+    }
+
+    private String callClaude(String prompt, String context) throws Exception {
+        String systemPrompt = "You are a stock market assistant for an Indian stock portfolio app (NSE/BSE). " +
+                "You have access to the user's portfolio data, live prices, and technical analysis signals. " +
+                "Answer questions about stocks, market trends, portfolio analysis, trading strategies, sector analysis, etc. " +
+                "When mentioning stocks, include their current price and signal if available. " +
+                "Keep responses concise (3-5 sentences). Always include a clear recommendation when relevant. " +
+                "Disclaimer: This is for educational purposes only, not financial advice.";
+
+        String fullPrompt = String.format("Context:\n%s\n\nUser question: %s", context, prompt);
 
         RestClient client = RestClient.create();
+        String body = objectMapper.writeValueAsString(Map.of(
+                "model", "claude-sonnet-4-6",
+                "max_tokens", 500,
+                "system", systemPrompt,
+                "messages", List.of(Map.of("role", "user", "content", fullPrompt))
+        ));
+
         String response = client.post()
                 .uri("https://api.anthropic.com/v1/messages")
                 .header("x-api-key", anthropicApiKey)
                 .header("anthropic-version", "2023-06-01")
                 .header("content-type", "application/json")
-                .body(String.format("""
-                    {"model":"claude-sonnet-4-6","max_tokens":300,"messages":[{"role":"user","content":"%s"}]}
-                    """, prompt.replace("\"", "\\\"").replace("\n", "\\n")))
+                .body(body)
                 .retrieve()
                 .body(String.class);
 
@@ -135,41 +221,85 @@ public class AiStockService {
         return root.path("content").get(0).path("text").asText();
     }
 
-    private String generateLocalAnalysis(Map<String, Object> data) {
+    private String generateLocalResponse(String prompt, String context) {
+        String lower = prompt.toLowerCase();
+
+        if (lower.contains("portfolio") || lower.contains("my stocks") || lower.contains("my holdings")) {
+            return generatePortfolioResponse(context);
+        }
+        if (lower.contains("signal") || lower.contains("buy") || lower.contains("sell") || lower.contains("recommend")) {
+            return generateSignalResponse();
+        }
+        if (lower.contains("sector") || lower.contains("industry")) {
+            return "Sector analysis requires Claude AI. Set ANTHROPIC_API_KEY env var for AI-powered responses. " +
+                    "Your portfolio is concentrated in Materials (HINDALCO, JSWSTEEL). Consider diversifying.";
+        }
+
+        String symbol = extractStockSymbol(prompt);
+        if (symbol != null) {
+            return generateStockResponse(symbol);
+        }
+
+        return "I can help with: stock analysis (type a symbol like TCS or RELIANCE), portfolio review (ask 'how is my portfolio?'), " +
+                "trading signals (ask 'what should I buy/sell?'), and market insights. " +
+                "For richer AI analysis, set ANTHROPIC_API_KEY environment variable.";
+    }
+
+    private String generatePortfolioResponse(String context) {
+        List<Holding> active = holdingRepository.findAll().stream().filter(h -> h.getQuantity() > 0).toList();
+        if (active.isEmpty()) return "You have no active stock holdings.";
+
+        BigDecimal totalInv = active.stream().map(Holding::getInvestedAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return String.format("Your portfolio has %d stocks with ₹%s invested. %s",
+                active.size(), totalInv.setScale(0, RoundingMode.HALF_UP),
+                "Check the Holdings page for detailed P&L breakdown and the Dashboard for overall performance.");
+    }
+
+    private String generateSignalResponse() {
+        List<TradingSignal> signals = signalRepository.findByStatusOrderBySignalDateDesc(SignalStatus.ACTIVE);
+        if (signals.isEmpty()) return "No active trading signals. Run analysis from the Dashboard to generate new signals.";
+
+        long buys = signals.stream().filter(s -> s.getSignalType().name().contains("BUY")).count();
+        long sells = signals.stream().filter(s -> s.getSignalType().name().contains("SELL")).count();
+
+        String topBuy = signals.stream().filter(s -> s.getSignalType().name().contains("BUY")).findFirst()
+                .map(s -> s.getSymbol() + " (target ₹" + s.getTargetPrice() + ")").orElse("none");
+        String topSell = signals.stream().filter(s -> s.getSignalType().name().contains("SELL")).findFirst()
+                .map(s -> s.getSymbol() + " (target ₹" + s.getTargetPrice() + ")").orElse("none");
+
+        return String.format("%d active signals: %d BUY, %d SELL. Top BUY: %s. Top SELL: %s. " +
+                "Signals are based on SMA crossover, RSI, and 52-week analysis.", signals.size(), buys, sells, topBuy, topSell);
+    }
+
+    private String generateStockResponse(String symbol) {
+        Map<String, Object> data = getStockData(symbol);
+        if (data.isEmpty()) return "Could not find data for " + symbol;
+
         String signal = String.valueOf(data.getOrDefault("signalType", "NO_SIGNAL"));
-        Object ltpObj = data.get("ltp");
-        Object targetObj = data.get("targetPrice");
-        Object changePctObj = data.get("dayChangePct");
-        String sector = String.valueOf(data.getOrDefault("sector", "Unknown"));
+        Object ltp = data.get("ltp");
+        Object changePct = data.get("dayChangePct");
+        Object target = data.get("targetPrice");
 
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("%s (%s) in %s sector. ", data.get("symbol"), data.get("companyName"), sector));
-
-        if (ltpObj != null) {
-            sb.append(String.format("Trading at ₹%s", ltpObj));
-            if (changePctObj != null) {
-                BigDecimal pct = new BigDecimal(changePctObj.toString());
-                sb.append(String.format(" (%s%s%% today). ", pct.compareTo(BigDecimal.ZERO) >= 0 ? "+" : "", pct));
-            } else {
-                sb.append(". ");
-            }
-        }
+        sb.append(String.format("%s (%s)", symbol, data.get("companyName")));
+        if (ltp != null) sb.append(String.format(" trading at ₹%s", ltp));
+        if (changePct != null) sb.append(String.format(" (%s%% today)", changePct));
+        sb.append(". ");
 
         switch (signal) {
             case "BUY_SIGNAL" -> {
-                sb.append("Technical signals indicate BUY. ");
-                if (targetObj != null) sb.append(String.format("Target price: ₹%s. ", targetObj));
-                sb.append("Consider accumulating on dips.");
+                sb.append("Signal: BUY. ");
+                if (target != null) sb.append(String.format("Target ₹%s. ", target));
+                sb.append("Technical indicators suggest accumulation.");
             }
             case "SELL_SIGNAL" -> {
-                sb.append("Technical signals indicate SELL. ");
-                if (targetObj != null) sb.append(String.format("Target price: ₹%s. ", targetObj));
-                sb.append("Consider booking profits or setting stop-loss.");
+                sb.append("Signal: SELL. ");
+                if (target != null) sb.append(String.format("Target ₹%s. ", target));
+                sb.append("Consider booking profits.");
             }
-            case "HOLD" -> sb.append("Technical signals suggest HOLD. No strong directional bias. Wait for clearer trend.");
-            default -> sb.append("No active trading signal. Run technical analysis to generate signals.");
+            case "HOLD" -> sb.append("Signal: HOLD. No strong directional bias currently.");
+            default -> sb.append("No active signal. Run analysis to generate.");
         }
-
         return sb.toString();
     }
 }

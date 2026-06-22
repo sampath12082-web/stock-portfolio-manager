@@ -16,8 +16,13 @@ public class AiSearchController {
         this.aiStockService = aiStockService;
     }
 
+    @PostMapping("/chat")
+    public Map<String, Object> chat(@RequestBody Map<String, String> body) {
+        return aiStockService.chat(body.getOrDefault("prompt", ""));
+    }
+
     @GetMapping("/search")
     public Map<String, Object> search(@RequestParam String query) {
-        return aiStockService.searchAndAnalyze(query);
+        return aiStockService.chat(query);
     }
 }
