@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Briefcase, ArrowLeftRight, Database, PieChart, TrendingUp, Shield, HelpCircle, MessageSquare, X,
+  LayoutDashboard, Briefcase, ArrowLeftRight, Database, PieChart, TrendingUp, Shield, HelpCircle, MessageSquare, Sparkles, X,
 } from 'lucide-react';
 import { useAuth } from '@/auth/AuthContext';
 
@@ -11,6 +11,7 @@ const links = [
   { to: '/stocks', label: 'Stocks', icon: Database },
   { to: '/mutual-funds', label: 'Mutual Funds', icon: PieChart },
   { to: '/performance', label: 'Performance', icon: TrendingUp },
+  { to: '/ai-search', label: 'AI Search', icon: Sparkles },
   { to: '/help', label: 'Help & Support', icon: HelpCircle },
 ];
 
