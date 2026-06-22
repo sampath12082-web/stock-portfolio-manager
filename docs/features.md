@@ -48,7 +48,7 @@
 ### 1. Dashboard (`/`)
 - **Portfolio summary**: Deposited, Invested, Current Value, Cash Balance, Unrealized/Realized/Total P&L, Day Change
 - **Groww Account**: Available Cash, Clear Cash, Margin Used, UCC, exchange/segment status
-- **Mutual Funds summary**: Holdings count, Invested, Current Value, P&L
+- **Mutual Funds summary**: Col 1: Invested, Current Value | Col 2: Holdings count, P&L
 - **Sector Allocation**: Pie chart of active holdings by sector
 - **Top Holdings**: Table of top 5 by current value
 - **Portfolio Value chart**: 30-day area chart from snapshots
@@ -98,16 +98,22 @@
 
 ### 6. Help & Support (`/help`)
 - **FAQ accordion**: Grouped by category (General, Account, Trading, Data, Technical)
-- **12 seeded FAQs**: Pre-populated via V19 migration
-- **Support tickets**: Submit with subject + message
-- **My tickets**: List of user's own tickets with admin responses
-- **Ticket status**: Open, Responded, Closed
+- **14 seeded FAQs**: Pre-populated via V19 migration + admin additions
+- **Support tickets**: Submit with subject + message → AI agent auto-processes
+- **AI Agent**: Auto-classifies tickets (Bug/Inquiry/Feature/Feedback), generates smart responses
+- **Bug verification**: For bug reports, Playwright tests run automatically to verify
+- **Ticket type badges**: Bug (red), Inquiry (blue), Feature (purple), Feedback (green)
+- **AI response display**: Purple box with Sparkles icon shows AI-generated response
+- **Bug report progress**: Shows test status (passing/failing), estimation, fix status
+- **Auto-refresh**: Polls every 8s while tickets are in OPEN status (waiting for AI)
+- **My tickets**: Full lifecycle view with AI response, admin response, bug report card
+- **Ticket statuses**: OPEN → AI_REVIEWED → BUG_CONFIRMED/BUG_NOT_CONFIRMED → APPROVED → IN_DEVELOPMENT → RESOLVED → CLOSED
 
 ### 7. Mutual Funds (`/mutual-funds`)
-- **Holdings table**: Scheme name, fund house, units, avg NAV, invested, current NAV, current value, P&L, P&L%
+- **Sortable holdings table**: Fund, Fund House, Units, Avg NAV, Current NAV, Invested, Current Value, P&L, P&L%
+- **Sortable transactions table**: Date, Fund, Type, Units, NAV, Amount
 - **Total row**: Footer sums units, invested, current value, P&L, P&L%
 - **Color coding**: Green row (current NAV > avg NAV), red text (current NAV < avg NAV)
-- **Transactions table**: Scheme, type (PURCHASE/REDEMPTION), units, NAV, amount, date
 - **AMFI search**: Search and add funds from AMFI catalog
 - **NAV refresh**: Bulk refresh from AMFI feed
 - **Add fund/holding/transaction modals**
@@ -150,10 +156,15 @@
 - Visible only to ROLE_ADMIN (sidebar conditional)
 
 ### 14. Admin — Support Tickets (`/admin/tickets`)
-- List all user tickets with subject, status, date
-- Expand to view message
-- Respond to tickets with admin reply
-- Close/reopen tickets
+- **Filter tabs**: All, Pending, Bugs, Inquiries, Features with counts
+- **Ticket cards**: Subject, type badge, status badge, priority badge, user info, date
+- **AI response display**: Purple box shows AI agent's auto-response
+- **Bug management inline**: For verified bugs — Approve/Reject buttons, priority selector
+- **Bug lifecycle buttons**: Start Development → Mark Fixed progression
+- **Re-run Tests**: Button to re-trigger Playwright tests on a bug
+- **Test results**: Shows pass/fail count and failed test names
+- **Respond**: Inline textarea + status dropdown for admin replies
+- **Expanded statuses**: AI_REVIEWED, BUG_CONFIRMED, BUG_NOT_CONFIRMED, APPROVED, IN_DEVELOPMENT
 
 ### 15. Header (all pages)
 - SoloSprint Trade brand in sidebar

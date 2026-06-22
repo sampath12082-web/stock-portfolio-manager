@@ -1,54 +1,68 @@
-# Handoff — Stock Portfolio Manager
+# Session Handoff
 
-## Current State (as of 2026-06-22)
+## Date: 2026-06-22
 
-### What's Running (port 8081)
+## Current State
 
-V1-V22 migrations. JWT auth + RSA encryption. 15 entities, 16 controllers, 22 migrations. 129 stocks, 567 transactions, 9 active holdings, 15 MF funds, 12 MF holdings, 279 MF transactions, 17 users, 12 FAQs, 128 signals. 14 frontend pages. 8 custom skills.
+App running at **http://localhost:8081**. Admin: `sampath12082@gmail.com` / `Admin@1234567890*`.
 
-### Authentication
-- Admin: `sampath12082@gmail.com` / `Admin@1234567890*` (ROLE_ADMIN)
-- JWT: access 15min, refresh 7 days
-- Password policy: 16-20 chars, upper+lower+digit+special
-- RSA 2048-bit encryption for passwords in transit
-- Security questions: 2 per user, BCrypt hashed, used for password reset
+### Data
+| Entity | Count |
+|--------|-------|
+| Stocks | 129 |
+| Holdings | 129 (9 active) |
+| Transactions | 567 |
+| MF Holdings | 12 |
+| Users | 29 |
+| Active Signals | 1,790 |
 
-### App URL
-- **http://localhost:8081** (backend serves frontend)
-- Frontend dev: http://localhost:3000 (proxies to 8081)
+### Migrations: V1–V24
+- V1-V14: Core domain (stocks, holdings, transactions, signals, MF, trade_type)
+- V15-V18: Users, OTP, user_id FK, admin seed
+- V19-V20: FAQ (14), support tickets
+- V21: Security questions
+- V22: Per-user Groww config
+- V23-V24: AI support agent (bug_report, ticket_activity, ticket classification fields)
 
----
+### Branding
+SoloSprint Trade — Sprint Orange (#D85A30), Plus Jakarta Sans + JetBrains Mono, cream background (#FAFAF8).
 
-## Pending Work
+## Recent Changes (This Session)
+1. **AI Stock Search** — Chat-style page, dynamic prompts, Claude API + local fallback
+2. **SoloSprint Trade branding** — All 15 pages, sidebar, header, login/register/forgot
+3. **Holdings total row** — Footer sums qty, invested, current, realized/unrealized P&L
+4. **MF total row** — Footer sums units, invested, current, P&L, P&L%
+5. **MF sortable columns** — Holdings + transactions tables both sortable
+6. **Dashboard MF layout** — Col 1: Invested + Current | Col 2: Holdings + P&L
+7. **AI Support Ticket Agent** — Auto-classifies tickets, generates responses, runs Playwright tests for bugs, full bug lifecycle with admin approval
+8. **33 new E2E tests** — Signals, Help/FAQ, Quotes, Password Policy, Security Questions, Groww, Admin
+9. **8 new UI tests** — Performance, Admin Tickets, Register, Forgot Password, Login branding
+10. **Bug fixes** — Today's Orders filter, test password updates, strict selectors
 
-**0 open bugs. 0 open enhancements.** All 36 enhancements and 22 bugs resolved.
+## Test Results
+- **124 tests** across 5 suites (smoke:10, auth:17, functional:56, regression:13, ui-rendering:28)
+- 121 passed in last run, 3 flaky (token expiry in long runs)
 
----
+## Open Bugs: 0
+## Open Enhancements: 0
 
-## Project Structure
+## Known Issues
+- **AI Search page** needs redesign (not tested, skipped intentionally)
+- **Playwright test runner** — `e2e.test-dir` may need absolute path if `../e2e` doesn't resolve
+- **3 DELETE endpoints** untested — intentionally skipped to avoid data loss
+
+## Environment
 ```
-backend/    — Spring Boot 3.5 / Java 21 (15 entities, 16 controllers, V1-V22)
-frontend/   — React 19 / Vite / Tailwind (14 pages, 9 hooks)
-e2e/        — Playwright (5 test files)
-scripts/    — Python import scripts (stock + MF)
-docs/       — 7 documentation files
-.claude/skills/ — 8 custom skills
+DB_PASSWORD=<set in env>
+DB_USER=sampat
+GROWW_API_ENABLED=true
+ANTHROPIC_API_KEY=<optional, enables Claude AI for ticket agent + stock search>
 ```
 
-## Key Files
-- [CLAUDE.md](../CLAUDE.md) — Architecture reference
-- [docs/ENHANCEMENTS.md](ENHANCEMENTS.md) — 0 open + 36 resolved
-- [docs/BUGS.md](BUGS.md) — 0 open + 22 resolved
-- [docs/user-module.md](user-module.md) — Auth, security questions, RSA, password policy
-- [docs/api-reference.md](api-reference.md) — Complete API reference
-- [docs/features.md](features.md) — All 14 pages documented
-- [docs/architecture.md](architecture.md) — System diagram + ER diagram
-
-## Flyway Migrations (V1-V22)
-| Range | Purpose |
-|-------|---------|
-| V1-V14 | Stock, holding, transaction, quote, snapshot, signal, MF, trade_type |
-| V15-V18 | Users, OTP, user_id FK, admin seed |
-| V19-V20 | FAQ, support tickets |
-| V21 | Security questions on users |
-| V22 | Per-user Groww config |
+## Key Files Modified This Session
+- `backend/.../service/AiTicketAgentService.java` — AI ticket classification + response
+- `backend/.../service/BugLifecycleService.java` — Bug approve/reject/fix lifecycle
+- `backend/.../service/PlaywrightTestRunnerService.java` — ProcessBuilder test execution
+- `frontend/src/pages/HelpPage.tsx` — AI responses, bug progress, auto-refresh
+- `frontend/src/pages/AdminTicketsPage.tsx` — Filter tabs, bug management, lifecycle buttons
+- `frontend/src/components/brand/Logo.tsx` — SoloSprint Trade logo component

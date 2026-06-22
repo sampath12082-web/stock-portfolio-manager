@@ -21,7 +21,7 @@ cd frontend && npm run dev
 # Frontend — production build (outputs to backend/src/main/resources/static/)
 cd frontend && npm run build
 
-# E2E tests — 116 tests (requires backend running on port 8081)
+# E2E tests — 124 tests (requires backend running on port 8081)
 cd e2e && npm test                    # All tests
 cd e2e && npm run test:smoke          # Smoke tests (10)
 cd e2e && npm run test:functional     # Functional tests (56)
@@ -74,7 +74,7 @@ Spring Boot 3.5 / Java 21 WAR backend + React 19 / Vite / Tailwind CSS frontend 
 - **DTOs** use Java records for requests and responses
 - **Entities** extend `BaseEntity` (provides `createdAt`/`updatedAt` via JPA auditing)
 - **All entities use manual getters/setters** — Lombok is on classpath but not used
-- **Database migrations** managed by Flyway (`backend/src/main/resources/db/migration/`, V1–V22). Hibernate `ddl-auto=validate` — schema changes must go through Flyway. V15-V18 add users, OTP, user_id FK, admin seed. V19-V20 add FAQ and support tickets. V21 adds security questions. V22 adds per-user Groww config.
+- **Database migrations** managed by Flyway (`backend/src/main/resources/db/migration/`, V1–V24). Hibernate `ddl-auto=validate` — schema changes must go through Flyway. V15-V18 add users, OTP, user_id FK, admin seed. V19-V20 add FAQ and support tickets. V21 adds security questions. V22 adds per-user Groww config. V23-V24 add AI support agent (bug_report, ticket_activity tables, ticket classification fields).
 - **Constructor injection** throughout (no `@Autowired`)
 - **Mappers** are `@Component` classes (`StockMapper`, `HoldingMapper`)
 

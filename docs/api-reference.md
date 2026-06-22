@@ -41,6 +41,27 @@ Pass token as: `Authorization: Bearer <accessToken>`
 | POST | `/api/admin/users/{id}/reset-password` | Reset user password (returns temp password) |
 | DELETE | `/api/admin/users/{id}` | Delete user (cannot delete admin) |
 
+## Bug Report APIs (ROLE_ADMIN only)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/bugs` | List all bug reports (optional `?status=` filter) |
+| PUT | `/api/admin/bugs/{id}/approve` | Approve bug for development (body: `{adminNotes, priority}`) |
+| PUT | `/api/admin/bugs/{id}/reject` | Reject bug (body: `{adminNotes}`) |
+| PUT | `/api/admin/bugs/{id}/start-development` | Mark bug as in development |
+| PUT | `/api/admin/bugs/{id}/mark-fixed` | Mark bug as fixed, closes ticket (body: `{resolution}`) |
+| POST | `/api/admin/bugs/{id}/rerun-tests` | Re-run Playwright tests for this bug |
+
+Bug statuses: `PENDING_VERIFICATION` → `VERIFIED` / `NOT_REPRODUCIBLE` → `APPROVED` → `IN_DEVELOPMENT` → `FIXED` / `WONT_FIX`
+
+## Ticket Activity API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/help/tickets/{id}/activity` | Get activity timeline for a ticket |
+
+Response: array of `{ actor, action, detail, createdAt }`. Actors: `AI_AGENT`, `ADMIN`, `USER`, `SYSTEM`.
+
 ## Stock APIs
 
 | Method | Endpoint | Description |
