@@ -109,15 +109,15 @@ export default function AiSearchPage() {
                 <Bot size={16} className="text-purple-600" />
               </div>
             )}
-            <div className={`max-w-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-2xl rounded-br-md' : 'bg-white border border-gray-200 rounded-2xl rounded-bl-md shadow-sm'} px-4 py-3`}>
+            <div className={`max-w-2xl ${msg.role === 'user' ? 'bg-[#D85A30] text-white rounded-2xl rounded-br-md' : 'bg-white border border-gray-200 rounded-2xl rounded-bl-md shadow-sm'} px-4 py-3`}>
               <p className={`text-sm leading-relaxed whitespace-pre-line ${msg.role === 'user' ? 'text-white' : 'text-gray-700'}`}>{msg.content}</p>
 
               {msg.stockData && (
-                <div className={`mt-3 p-3 rounded-lg ${msg.role === 'user' ? 'bg-blue-500' : 'bg-gray-50'}`}>
+                <div className={`mt-3 p-3 rounded-lg ${msg.role === 'user' ? 'bg-[#C04E28]' : 'bg-gray-50'}`}>
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <span className="font-bold text-sm">{msg.stockData.symbol}</span>
-                      <span className={`text-xs ml-2 ${msg.role === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>{msg.stockData.companyName}</span>
+                      <span className={`text-xs ml-2 ${msg.role === 'user' ? 'text-[#F0997B]' : 'text-gray-400'}`}>{msg.stockData.companyName}</span>
                     </div>
                     {msg.stockData.ltp && (
                       <span className="font-bold text-sm">{formatCurrency(msg.stockData.ltp)}</span>
@@ -143,7 +143,7 @@ export default function AiSearchPage() {
               )}
 
               <div className={`flex items-center gap-2 mt-1 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                <span className={`text-[10px] ${msg.role === 'user' ? 'text-blue-200' : 'text-gray-300'}`}>
+                <span className={`text-[10px] ${msg.role === 'user' ? 'text-[#F0997B]' : 'text-gray-300'}`}>
                   {msg.timestamp.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                 </span>
                 {msg.source === 'claude' && <span className="text-[10px] text-purple-400">Claude AI</span>}
@@ -151,8 +151,8 @@ export default function AiSearchPage() {
               </div>
             </div>
             {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                <User size={16} className="text-blue-600" />
+              <div className="w-8 h-8 rounded-full bg-[#FAECE7] flex items-center justify-center shrink-0">
+                <User size={16} className="text-[#D85A30]" />
               </div>
             )}
           </div>

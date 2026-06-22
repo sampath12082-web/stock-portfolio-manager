@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Logo from '@/components/brand/Logo';
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<'email' | 'security' | 'otp' | 'done'>('email');
@@ -52,11 +53,11 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-blue-600">MyPortfolio</h1>
-          <p className="text-sm text-gray-500 mt-1">Reset your password</p>
+        <div className="flex flex-col items-center mb-8">
+          <Logo size="lg" />
+          <p className="text-sm text-[#888780] mt-3">Reset your password</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 space-y-4">
           {error && <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">{error}</div>}
@@ -68,9 +69,9 @@ export default function ForgotPasswordPage() {
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D85A30]/50" />
               </div>
-              <button type="submit" disabled={loading} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+              <button type="submit" disabled={loading} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
                 {loading ? 'Checking...' : 'Continue'}
               </button>
             </form>
@@ -82,14 +83,14 @@ export default function ForgotPasswordPage() {
               <div>
                 <label className="block text-sm text-gray-600 mb-1">{q1}</label>
                 <input type="text" value={a1} onChange={(e) => setA1(e.target.value)} required
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D85A30]/50" />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">{q2}</label>
                 <input type="text" value={a2} onChange={(e) => setA2(e.target.value)} required
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D85A30]/50" />
               </div>
-              <button type="submit" disabled={loading} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+              <button type="submit" disabled={loading} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
                 {loading ? 'Verifying...' : 'Verify & Send OTP'}
               </button>
             </form>
@@ -101,21 +102,21 @@ export default function ForgotPasswordPage() {
               <div>
                 <label className="block text-sm text-gray-600 mb-1">OTP Code</label>
                 <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required maxLength={6} placeholder="000000"
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-[#D85A30]/50" />
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">New Password (16-20 chars)</label>
                 <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={16} maxLength={20}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D85A30]/50" />
               </div>
-              <button type="submit" disabled={loading} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+              <button type="submit" disabled={loading} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>
             </form>
           )}
 
           <div className="text-center text-xs text-gray-500">
-            <Link to="/login" className="text-blue-600 hover:underline">Back to login</Link>
+            <Link to="/login" className="text-[#D85A30] hover:underline">Back to login</Link>
           </div>
         </div>
       </div>

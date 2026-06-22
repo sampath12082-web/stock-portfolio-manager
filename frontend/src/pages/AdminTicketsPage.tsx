@@ -54,7 +54,7 @@ export default function AdminTicketsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <MessageSquare size={24} className="text-blue-600" />
+        <MessageSquare size={24} className="text-[#D85A30]" />
         <h1 className="text-2xl font-bold text-gray-900">Admin — Support Tickets</h1>
         <span className="text-sm text-gray-400">{tickets.length} total</span>
       </div>
@@ -79,7 +79,7 @@ export default function AdminTicketsPage() {
               </div>
 
               {t.adminResponse && (
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded text-sm text-blue-700">
+                <div className="mt-3 p-3 bg-[#FAECE7] border border-[#D85A30]/20 rounded text-sm text-[#712B13]">
                   <span className="font-medium">Response: </span>{t.adminResponse}
                 </div>
               )}
@@ -94,13 +94,13 @@ export default function AdminTicketsPage() {
                       <option value="RESOLVED">Resolved</option>
                       <option value="CLOSED">Closed</option>
                     </select>
-                    <button onClick={() => handleRespond(t.id)} className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded text-sm"><Send size={12} /> Send</button>
+                    <button onClick={() => handleRespond(t.id)} className="flex items-center gap-1 px-3 py-1 bg-[#D85A30] text-white rounded text-sm"><Send size={12} /> Send</button>
                     <button onClick={() => setResponding(null)} className="px-3 py-1 text-gray-500 text-sm">Cancel</button>
                   </div>
                 </div>
               ) : (
                 <button onClick={() => { setResponding(t.id); setResponse(t.adminResponse || ''); }}
-                  className="mt-2 text-xs text-blue-600 hover:underline">
+                  className="mt-2 text-xs text-[#D85A30] hover:underline">
                   {t.adminResponse ? 'Edit Response' : 'Respond'}
                 </button>
               )}

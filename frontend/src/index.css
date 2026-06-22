@@ -1,9 +1,10 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+  @apply bg-[#FAFAF8] text-[#2C2C2A] antialiased;
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 #root {
@@ -14,8 +15,8 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  @apply bg-[#F1EFE8];
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded;
+  @apply bg-[#D3D1C7] rounded;
 }

@@ -63,7 +63,7 @@ function AddStockModal({ open, onClose, onAdded }: { open: boolean; onClose: () 
                       <span className="font-semibold text-sm text-gray-900">{r.symbol}</span>
                       <Badge variant={r.exchange === 'NSE' ? 'blue' : 'yellow'}>{r.exchange}</Badge>
                       {r.existsInDb ? <span className="flex items-center gap-1 text-xs text-emerald-600"><Database size={10} />In DB</span>
-                        : <span className="flex items-center gap-1 text-xs text-blue-600"><Globe size={10} />Web</span>}
+                        : <span className="flex items-center gap-1 text-xs text-[#D85A30]"><Globe size={10} />Web</span>}
                     </div>
                     <p className="text-xs text-gray-500 truncate">{r.companyName}</p>
                   </div>
@@ -84,7 +84,7 @@ function AddStockModal({ open, onClose, onAdded }: { open: boolean; onClose: () 
             <div><label className="block text-sm text-gray-500 mb-1">Exchange</label><select name="exchange" required value={picked.exchange ?? 'NSE'} onChange={(e) => setPicked({ ...picked, exchange: e.target.value })} className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm"><option value="NSE">NSE</option><option value="BSE">BSE</option></select></div>
             <div><label className="block text-sm text-gray-500 mb-1">Sector</label><input name="sector" value={picked.sector ?? ''} onChange={(e) => setPicked({ ...picked, sector: e.target.value })} className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
             <div><label className="block text-sm text-gray-500 mb-1">Industry</label><input name="industry" value={picked.industry ?? ''} onChange={(e) => setPicked({ ...picked, industry: e.target.value })} className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
-            <button type="submit" disabled={createMut.isPending || picked.existsInDb} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+            <button type="submit" disabled={createMut.isPending || picked.existsInDb} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
               {createMut.isPending ? 'Adding...' : picked.existsInDb ? 'Already in database' : 'Add Stock'}</button>
           </form>
         )}
@@ -165,7 +165,7 @@ export default function StocksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Stocks <span className="text-sm text-gray-500 font-normal">({filtered?.length ?? 0})</span></h1>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium">
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium">
           <Plus size={16} /> Add Stock
         </button>
       </div>
@@ -184,9 +184,9 @@ export default function StocksPage() {
             if (key !== 'ALL' && count === 0) return null;
             return (
               <button key={key} onClick={() => setSignalFilter(key)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${signalFilter === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${signalFilter === key ? 'bg-[#D85A30] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 {key === 'NONE' ? 'No Signal' : key}
-                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${signalFilter === key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>{count}</span>
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${signalFilter === key ? 'bg-[#C04E28] text-white' : 'bg-gray-200 text-gray-600'}`}>{count}</span>
               </button>
             );
           })}
@@ -195,9 +195,9 @@ export default function StocksPage() {
           <span className="text-xs text-gray-500 mr-1">Target:</span>
           {([['ALL', 'All', targetCounts.ALL], ['WITH_TARGET', 'Has Target', targetCounts.WITH_TARGET], ['WITHOUT_TARGET', 'No Target', targetCounts.WITHOUT_TARGET]] as const).map(([key, label, count]) => (
             <button key={key} onClick={() => setTargetFilter(key)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${targetFilter === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${targetFilter === key ? 'bg-[#D85A30] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
               {label}
-              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${targetFilter === key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>{count}</span>
+              <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${targetFilter === key ? 'bg-[#C04E28] text-white' : 'bg-gray-200 text-gray-600'}`}>{count}</span>
             </button>
           ))}
         </div>
@@ -235,7 +235,7 @@ export default function StocksPage() {
                 const isHeld = h && h.qty > 0;
                 const sig = signalMap.get(s.symbol);
                 return (
-                  <tr key={s.id} className={`border-b border-gray-100 hover:bg-gray-50 ${isHeld ? 'border-l-4 border-l-blue-500' : ''}`}>
+                  <tr key={s.id} className={`border-b border-gray-100 hover:bg-gray-50 ${isHeld ? 'border-l-4 border-l-[#D85A30]' : ''}`}>
                     <td className="py-2.5 px-3"><span className="font-semibold">{s.symbol}</span><br /><span className="text-xs opacity-70">{s.companyName}</span></td>
                     <td className="py-2.5 px-3"><Badge variant={s.exchange === 'NSE' ? 'blue' : 'yellow'}>{s.exchange}</Badge></td>
                     <td className="py-2.5 px-3 text-right">{h ? h.qty : <span className="text-gray-300">—</span>}</td>
@@ -258,8 +258,8 @@ export default function StocksPage() {
       ) : <EmptyState message={query ? 'No stocks match your search' : 'No stocks added yet'} />}
 
       {query && webResults.length > 0 && (
-        <div className="bg-white border border-blue-200 rounded-lg shadow-sm overflow-x-auto">
-          <div className="px-3 py-2 bg-blue-50 border-b border-blue-200 text-sm text-blue-700 font-medium flex items-center gap-2">
+        <div className="bg-white border border-[#D85A30]/30 rounded-lg shadow-sm overflow-x-auto">
+          <div className="px-3 py-2 bg-[#FAECE7] border-b border-[#D85A30]/30 text-sm text-[#712B13] font-medium flex items-center gap-2">
             <Globe size={14} /> Web Results — Click + to add
           </div>
           <table className="w-full text-sm">
@@ -276,7 +276,7 @@ export default function StocksPage() {
                       sector: r.sector ?? undefined, industry: r.industry ?? undefined,
                     }, { onSuccess: () => allStocks.refetch() })}
                       disabled={createMut.isPending}
-                      className="text-blue-600 hover:text-blue-500 p-1 font-bold" title="Add to database">
+                      className="text-[#D85A30] hover:text-[#D85A30] p-1 font-bold" title="Add to database">
                       <Plus size={16} />
                     </button>
                   </td>

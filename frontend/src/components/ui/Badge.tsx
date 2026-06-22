@@ -5,7 +5,7 @@ type Variant = 'green' | 'red' | 'blue' | 'yellow' | 'gray' | 'purple';
 const variantClasses: Record<Variant, string> = {
   green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   red: 'bg-red-50 text-red-700 border-red-200',
-  blue: 'bg-blue-50 text-blue-700 border-blue-200',
+  blue: 'bg-[#FAECE7] text-[#712B13] border-[#D85A30]/30',
   yellow: 'bg-yellow-50 text-yellow-700 border-yellow-200',
   gray: 'bg-gray-100 text-gray-600 border-gray-200',
   purple: 'bg-purple-50 text-purple-700 border-purple-200',

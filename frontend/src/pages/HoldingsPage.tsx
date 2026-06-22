@@ -132,7 +132,7 @@ export default function HoldingsPage() {
             <RefreshCw size={16} className={syncMut.isPending ? 'animate-spin' : ''} />
             {syncMut.isPending ? 'Syncing...' : 'Sync from Groww'}
           </button>
-          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium">
+          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium">
             <Plus size={16} /> Add Holding
           </button>
         </div>
@@ -168,9 +168,9 @@ export default function HoldingsPage() {
       <div className="flex gap-2 flex-wrap">
         {([['ALL', signalCounts.ALL], ['BUY', signalCounts.BUY], ['SELL', signalCounts.SELL], ['HOLD', signalCounts.HOLD], ['NONE', signalCounts.NONE]] as const).map(([key, count]) => (
           <button key={key} onClick={() => setSignalFilter(key)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${signalFilter === key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${signalFilter === key ? 'bg-[#D85A30] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {key === 'NONE' ? 'No Signal' : key}
-            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${signalFilter === key ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>{count}</span>
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${signalFilter === key ? 'bg-[#C04E28] text-white' : 'bg-gray-200 text-gray-600'}`}>{count}</span>
           </button>
         ))}
       </div>
@@ -213,7 +213,7 @@ export default function HoldingsPage() {
                 const rowClass = isLoss ? 'bg-red-50 text-red-700' : isGain ? 'bg-emerald-50 text-emerald-700' : '';
                 const isHeld = h.quantity > 0;
                 return (
-                  <tr key={h.id} className={`border-b border-gray-100 hover:opacity-80 ${rowClass} ${isHeld ? 'border-l-4 border-l-blue-500' : ''} ${!isHeld ? 'opacity-40' : ''}`}>
+                  <tr key={h.id} className={`border-b border-gray-100 hover:opacity-80 ${rowClass} ${isHeld ? 'border-l-4 border-l-[#D85A30]' : ''} ${!isHeld ? 'opacity-40' : ''}`}>
                     <td className="py-2.5 px-3"><span className="font-medium">{stockNameMap.get(h.symbol) || h.symbol}</span><br /><span className="text-xs opacity-70">{h.symbol}</span></td>
                     <td className="py-2.5 px-3 text-right">{h.quantity}</td>
                     <td className="py-2.5 px-3 text-right">{formatCurrency(h.averageBuyPrice)}</td>
@@ -227,7 +227,7 @@ export default function HoldingsPage() {
                       {sig ? <Badge variant={signalBadge[sig.type]}>{sig.type.replace('_', ' ')}</Badge> : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="py-2.5 px-3">
-                      <button onClick={() => setEditing(h)} className="text-blue-600 hover:text-blue-500 text-xs">Edit</button>
+                      <button onClick={() => setEditing(h)} className="text-[#D85A30] hover:text-[#D85A30] text-xs">Edit</button>
                     </td>
                   </tr>
                 );
@@ -236,7 +236,7 @@ export default function HoldingsPage() {
           </table>
         </div>
       ) : (
-        <EmptyState message="No holdings yet" action={<button onClick={() => setShowAdd(true)} className="text-blue-600 text-sm">Add your first holding</button>} />
+        <EmptyState message="No holdings yet" action={<button onClick={() => setShowAdd(true)} className="text-[#D85A30] text-sm">Add your first holding</button>} />
       )}
 
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add Holding">
@@ -255,7 +255,7 @@ export default function HoldingsPage() {
             <input name="quantity" type="number" min="1" required className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
           <div><label className="block text-sm text-gray-500 mb-1">Average Buy Price</label>
             <input name="averageBuyPrice" type="number" step="0.01" min="0.01" required className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
-          <button type="submit" disabled={createMut.isPending} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+          <button type="submit" disabled={createMut.isPending} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
             {createMut.isPending ? 'Adding...' : 'Add Holding'}</button>
         </form>
       </Modal>
@@ -272,7 +272,7 @@ export default function HoldingsPage() {
               <input name="quantity" type="number" min="1" defaultValue={editing.quantity} required className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
             <div><label className="block text-sm text-gray-500 mb-1">Average Buy Price</label>
               <input name="averageBuyPrice" type="number" step="0.01" min="0.01" defaultValue={editing.averageBuyPrice} required className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
-            <button type="submit" disabled={updateMut.isPending} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+            <button type="submit" disabled={updateMut.isPending} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
               {updateMut.isPending ? 'Saving...' : 'Save Changes'}</button>
           </form>
         )}

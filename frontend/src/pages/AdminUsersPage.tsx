@@ -56,11 +56,11 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Shield size={24} className="text-blue-600" />
+        <Shield size={24} className="text-[#D85A30]" />
         <h1 className="text-2xl font-bold text-gray-900">Admin — User Management</h1>
       </div>
 
-      {msg && <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700">{msg}</div>}
+      {msg && <div className="p-3 bg-[#FAECE7] border border-[#D85A30]/30 rounded-md text-sm text-[#712B13]">{msg}</div>}
 
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-auto">
         <table className="w-full text-sm">
@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
                     ) : (
                       <button onClick={() => updateStatus(u.id, 'ACTIVE')} title="Activate" className="p-1 text-gray-400 hover:text-green-600"><UserCheck size={14} /></button>
                     )}
-                    <button onClick={() => resetPassword(u.id, u.email)} title="Reset Password" className="p-1 text-gray-400 hover:text-blue-600"><KeyRound size={14} /></button>
+                    <button onClick={() => resetPassword(u.id, u.email)} title="Reset Password" className="p-1 text-gray-400 hover:text-[#D85A30]"><KeyRound size={14} /></button>
                     {u.role !== 'ROLE_ADMIN' && (
                       <button onClick={() => deleteUser(u.id, u.email)} title="Delete" className="p-1 text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
                     )}

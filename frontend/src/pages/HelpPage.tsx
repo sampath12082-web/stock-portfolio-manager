@@ -72,7 +72,7 @@ export default function HelpPage() {
             <div className="space-y-4">
               {categories.map(cat => (
                 <div key={cat}>
-                  <h4 className="text-xs font-semibold text-blue-600 uppercase mb-2">{cat}</h4>
+                  <h4 className="text-xs font-semibold text-[#D85A30] uppercase mb-2">{cat}</h4>
                   <div className="space-y-1">
                     {faqs.filter(f => f.category === cat).map(faq => (
                       <div key={faq.id} className="border border-gray-100 rounded-md">
@@ -105,15 +105,15 @@ export default function HelpPage() {
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Subject</label>
                 <input value={subject} onChange={e => setSubject(e.target.value)} required placeholder="Brief description of your issue"
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D85A30]/50" />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Message</label>
                 <textarea value={message} onChange={e => setMessage(e.target.value)} required rows={4} placeholder="Describe your issue in detail..."
-                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#D85A30]/50" />
               </div>
               <button type="submit" disabled={submitting}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+                className="flex items-center gap-2 px-4 py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
                 <Send size={14} /> {submitting ? 'Submitting...' : 'Submit Request'}
               </button>
             </form>
@@ -134,7 +134,7 @@ export default function HelpPage() {
                       <Clock size={10} /> {new Date(t.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
                     {t.adminResponse && (
-                      <div className="mt-2 p-2 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700">
+                      <div className="mt-2 p-2 bg-[#FAECE7] border border-[#D85A30]/20 rounded text-xs text-[#712B13]">
                         <div className="flex items-center gap-1 mb-1 font-medium"><CheckCircle size={10} /> Admin Response</div>
                         {t.adminResponse}
                       </div>

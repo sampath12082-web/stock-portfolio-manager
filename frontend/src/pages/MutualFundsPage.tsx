@@ -38,7 +38,7 @@ export default function MutualFundsPage() {
             className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-md text-sm font-medium disabled:opacity-50">
             <RefreshCw size={16} className={refreshNav.isPending ? 'animate-spin' : ''} /> Refresh NAV
           </button>
-          <button onClick={() => setShowAddFund(true)} className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium">
+          <button onClick={() => setShowAddFund(true)} className="flex items-center gap-2 px-3 py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium">
             <Plus size={16} /> Add Fund
           </button>
         </div>
@@ -83,13 +83,13 @@ export default function MutualFundsPage() {
               </tbody>
             </table>
           </div>
-        ) : <EmptyState message="No mutual fund holdings yet" action={<button onClick={() => setShowAddFund(true)} className="text-blue-600 text-sm">Add your first fund</button>} />}
+        ) : <EmptyState message="No mutual fund holdings yet" action={<button onClick={() => setShowAddFund(true)} className="text-[#D85A30] text-sm">Add your first fund</button>} />}
       </Card>
 
       {transactions && transactions.length > 0 && (
         <Card title="Transactions">
           <div className="flex justify-end mb-3">
-            <button onClick={() => setShowAddTxn(true)} className="flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium">
+            <button onClick={() => setShowAddTxn(true)} className="flex items-center gap-1 px-2 py-1 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded text-xs font-medium">
               <Plus size={12} /> Add Transaction
             </button>
           </div>
@@ -173,7 +173,7 @@ function AddFundModal({ open, onClose }: { open: boolean; onClose: () => void })
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-900">{f.schemeName.substring(0, 60)}</span>
                     {f.existsInDb ? <span className="text-xs text-emerald-600 flex items-center gap-1"><Database size={10} />In DB</span>
-                      : <span className="text-xs text-blue-600 flex items-center gap-1"><Globe size={10} />AMFI</span>}
+                      : <span className="text-xs text-[#D85A30] flex items-center gap-1"><Globe size={10} />AMFI</span>}
                   </div>
                   <div className="text-xs text-gray-500">Code: {f.schemeCode} | NAV: {formatCurrency(f.nav)} ({f.navDate})</div>
                 </button>
@@ -199,7 +199,7 @@ function AddFundModal({ open, onClose }: { open: boolean; onClose: () => void })
           <div><label className="block text-sm text-gray-500 mb-1">Average NAV (buy price per unit)</label>
             <input name="averageNav" type="number" step="0.0001" min="0.0001" required className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
           <button type="submit" disabled={createHolding.isPending}
-            className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+            className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
             {createHolding.isPending ? 'Adding...' : 'Add Holding'}</button>
         </form>
       )}
@@ -241,7 +241,7 @@ function AddMfTransactionModal({ open, onClose }: { open: boolean; onClose: () =
           <div><label className="block text-sm text-gray-500 mb-1">Amount</label><input name="amount" type="number" step="0.01" required className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
         </div>
         <div><label className="block text-sm text-gray-500 mb-1">Folio Number</label><input name="folioNumber" className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
-        <button type="submit" disabled={createTxn.isPending} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+        <button type="submit" disabled={createTxn.isPending} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
           {createTxn.isPending ? 'Recording...' : 'Record Transaction'}</button>
       </form>
     </Modal>

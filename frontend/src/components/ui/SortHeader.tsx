@@ -23,8 +23,8 @@ export default function SortHeader({ label, sortKey, sort, onSort, align = 'left
         className={`inline-flex items-center gap-1 hover:text-gray-900 transition-colors ${active ? 'text-gray-900 font-semibold' : ''}`}>
         {label}
         <span className="flex flex-col -space-y-1">
-          <ChevronUp size={10} className={active && sort.dir === 'asc' ? 'text-blue-600' : 'text-gray-300'} />
-          <ChevronDown size={10} className={active && sort.dir === 'desc' ? 'text-blue-600' : 'text-gray-300'} />
+          <ChevronUp size={10} className={active && sort.dir === 'asc' ? 'text-[#D85A30]' : 'text-gray-300'} />
+          <ChevronDown size={10} className={active && sort.dir === 'desc' ? 'text-[#D85A30]' : 'text-gray-300'} />
         </span>
       </button>
     </th>

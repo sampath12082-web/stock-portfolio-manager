@@ -54,7 +54,7 @@ function AddTransactionForm({ onSuccess }: { onSuccess: () => void }) {
       )}
       <div><label className="block text-sm text-gray-500 mb-1">{isFund ? 'Amount' : 'Price per unit'}</label>
         <input name="price" type="number" step="0.01" min="0.01" required className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" /></div>
-      <button type="submit" disabled={createMut.isPending} className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+      <button type="submit" disabled={createMut.isPending} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
         {createMut.isPending ? 'Recording...' : 'Record Transaction'}</button>
     </form>
   );
@@ -121,14 +121,14 @@ export default function TransactionsPage() {
             className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 rounded-md text-sm font-medium disabled:opacity-50">
             <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload PDF'}
           </button>
-          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium">
+          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium">
             <Plus size={16} /> Add Transaction
           </button>
         </div>
       </div>
 
       {uploadMsg && (
-        <div className={`p-3 rounded-md text-sm whitespace-pre-line ${uploadMsg.includes('failed') ? 'bg-red-50 text-red-700 border border-red-200' : uploadMsg.includes('Note:') ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+        <div className={`p-3 rounded-md text-sm whitespace-pre-line ${uploadMsg.includes('failed') ? 'bg-red-50 text-red-700 border border-red-200' : uploadMsg.includes('Note:') ? 'bg-[#FAECE7] text-[#712B13] border border-[#D85A30]/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
           {uploadMsg}
         </div>
       )}
@@ -231,7 +231,7 @@ export default function TransactionsPage() {
             </tbody>
           </table>
         </div>
-      ) : <EmptyState message="No transactions yet" action={<button onClick={() => setShowAdd(true)} className="text-blue-600 text-sm">Record your first transaction</button>} />}
+      ) : <EmptyState message="No transactions yet" action={<button onClick={() => setShowAdd(true)} className="text-[#D85A30] text-sm">Record your first transaction</button>} />}
 
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add Transaction">
         <AddTransactionForm onSuccess={() => { setShowAdd(false); refetch(); analytics.refetch(); }} />

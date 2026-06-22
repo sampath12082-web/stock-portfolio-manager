@@ -26,7 +26,7 @@ export default function PerformancePage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Performance</h1>
         <button onClick={() => captureMut.mutate()} disabled={captureMut.isPending}
-          className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+          className="flex items-center gap-2 px-3 py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
           <Camera size={16} /> {captureMut.isPending ? 'Capturing...' : 'Capture Snapshot'}
         </button>
       </div>
@@ -50,7 +50,7 @@ export default function PerformancePage() {
       <div className="flex gap-2">
         {PRESETS.map((p) => (
           <button key={p.days} onClick={() => setDays(p.days)}
-            className={`px-3 py-1 rounded-md text-sm font-medium ${days === p.days ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            className={`px-3 py-1 rounded-md text-sm font-medium ${days === p.days ? 'bg-[#D85A30] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {p.label}
           </button>
         ))}

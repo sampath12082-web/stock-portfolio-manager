@@ -68,7 +68,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-400">Role: <span className="font-medium text-gray-600">{user?.role === 'ROLE_ADMIN' ? 'Admin' : 'User'}</span></span>
-              <button type="submit" disabled={saving} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+              <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
                 {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
@@ -89,7 +89,7 @@ export default function ProfilePage() {
                 className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm" />
             </div>
             <div className="text-right">
-              <button type="submit" disabled={saving} className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+              <button type="submit" disabled={saving} className="px-4 py-1.5 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
                 {saving ? 'Changing...' : 'Change Password'}
               </button>
             </div>

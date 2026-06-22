@@ -31,7 +31,7 @@ function RunAnalysisButton({ onDone }: { onDone: () => void }) {
         setLoading(true);
         try { await analyzeHoldings(); onDone(); } catch { /* ignore */ }
         setLoading(false);
-      }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm font-medium disabled:opacity-50">
+      }} className="flex items-center gap-2 px-4 py-2 bg-[#D85A30] hover:bg-[#C04E28] text-white rounded-md text-sm font-medium disabled:opacity-50">
         <Zap size={14} /> {loading ? 'Analyzing...' : 'Run Analysis'}
       </button>
     </div>
@@ -47,8 +47,8 @@ function GrowwOrdersSection({ orders }: { orders: Array<{ symbol: string; transa
       <div className="flex items-center justify-between w-full">
         <span>Today's Orders</span>
         <div className="flex gap-1">
-          <button onClick={() => setShowAll(false)} className={`px-2 py-0.5 rounded text-xs font-medium ${!showAll ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Executed</button>
-          <button onClick={() => setShowAll(true)} className={`px-2 py-0.5 rounded text-xs font-medium ${showAll ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>All ({orders.length})</button>
+          <button onClick={() => setShowAll(false)} className={`px-2 py-0.5 rounded text-xs font-medium ${!showAll ? 'bg-[#D85A30] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>Executed</button>
+          <button onClick={() => setShowAll(true)} className={`px-2 py-0.5 rounded text-xs font-medium ${showAll ? 'bg-[#D85A30] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>All ({orders.length})</button>
         </div>
       </div>
     }>
@@ -121,8 +121,8 @@ export default function DashboardPage() {
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className="bg-white border-2 border-blue-200 rounded-lg shadow-sm p-4">
-          <h3 className="text-xs font-bold text-blue-500 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-blue-100">Total Funds</h3>
+        <div className="bg-white border-2 border-[#D85A30]/30 rounded-lg shadow-sm p-4">
+          <h3 className="text-xs font-bold text-[#D85A30] uppercase tracking-wide pb-1.5 mb-2.5 border-b border-[#D85A30]/20">Total Funds</h3>
           <div className="grid grid-cols-[1fr_1px_1fr] gap-x-4">
             <div className="space-y-1.5">
               <div className="flex justify-between text-sm"><span className="text-gray-500">Total Invested</span><span className="font-semibold text-gray-900">{formatCurrency(totalInvested)}</span></div>
@@ -130,7 +130,7 @@ export default function DashboardPage() {
               <div className="flex justify-between text-sm"><span className="text-gray-500">Cash</span><span className="font-semibold text-gray-900">{clearCash != null ? formatCurrency(totalCash) : <span className="text-gray-400 text-xs">Groww offline</span>}</span></div>
               <div className="flex justify-between text-sm"><span className="text-gray-500">Net Worth</span><span className="font-bold text-gray-900">{clearCash != null ? formatCurrency(totalNetWorth) : formatCurrency(totalCurrentValue)}</span></div>
             </div>
-            <div className="bg-blue-100" />
+            <div className="bg-[#FAECE7]" />
             <div className="space-y-1.5">
               <div className="flex justify-between text-sm"><span className="text-gray-500">Unrealized P&L</span><span className="font-semibold"><PnLText value={totalUnrealizedPnL} format={formatCurrency} /><span className="text-xs ml-1">(<PnLText value={totalUnrealizedPct} format={formatPercentage} />)</span></span></div>
               <div className="flex justify-between text-sm"><span className="text-gray-500">Stocks</span><span className="font-semibold text-gray-900">{formatCurrency(d?.currentValue)}</span></div>

@@ -32,14 +32,14 @@ export default function SignalsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Trading Signals</h1>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-md text-sm font-medium">
+        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-3 py-2 bg-[#D85A30] hover:bg-[#C04E28] rounded-md text-sm font-medium">
           <Plus size={16} /> New Signal
         </button>
       </div>
 
       <div className="flex gap-2">
         {(['today', 'active'] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-md text-sm font-medium ${tab === t ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`}>
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 rounded-md text-sm font-medium ${tab === t ? 'bg-[#D85A30] text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}`}>
             {t === 'today' ? 'Today' : 'Active'}
           </button>
         ))}
@@ -55,7 +55,7 @@ export default function SignalsPage() {
                   {s.companyName && <span className="text-sm text-slate-400">{s.companyName}</span>}
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => setEditing(s)} className="text-slate-400 hover:text-blue-400 p-1"><Edit size={14} /></button>
+                  <button onClick={() => setEditing(s)} className="text-slate-400 hover:text-[#D85A30] p-1"><Edit size={14} /></button>
                   <button onClick={() => { if (confirm('Cancel this signal?')) deleteMut.mutate(s.id); }} className="text-slate-400 hover:text-red-400 p-1"><Trash2 size={14} /></button>
                 </div>
               </div>
@@ -74,7 +74,7 @@ export default function SignalsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState message={tab === 'today' ? 'No signals for today' : 'No active signals'} action={<button onClick={() => setShowAdd(true)} className="text-blue-400 text-sm">Create a signal</button>} />
+        <EmptyState message={tab === 'today' ? 'No signals for today' : 'No active signals'} action={<button onClick={() => setShowAdd(true)} className="text-[#D85A30] text-sm">Create a signal</button>} />
       )}
 
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="New Signal">
@@ -95,7 +95,7 @@ export default function SignalsPage() {
           <div><label className="block text-sm text-slate-400 mb-1">Target Price</label><input name="targetPrice" type="number" step="0.01" className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm" /></div>
           <div><label className="block text-sm text-slate-400 mb-1">Stop Loss</label><input name="stopLoss" type="number" step="0.01" className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm" /></div>
           <div><label className="block text-sm text-slate-400 mb-1">Rationale</label><textarea name="rationale" rows={2} className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm" /></div>
-          <button type="submit" disabled={createMut.isPending} className="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-md text-sm font-medium disabled:opacity-50">{createMut.isPending ? 'Creating...' : 'Create Signal'}</button>
+          <button type="submit" disabled={createMut.isPending} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] rounded-md text-sm font-medium disabled:opacity-50">{createMut.isPending ? 'Creating...' : 'Create Signal'}</button>
         </form>
       </Modal>
 
@@ -118,7 +118,7 @@ export default function SignalsPage() {
             <div><label className="block text-sm text-slate-400 mb-1">Target Price</label><input name="targetPrice" type="number" step="0.01" defaultValue={editing.targetPrice ?? ''} className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm" /></div>
             <div><label className="block text-sm text-slate-400 mb-1">Stop Loss</label><input name="stopLoss" type="number" step="0.01" defaultValue={editing.stopLoss ?? ''} className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm" /></div>
             <div><label className="block text-sm text-slate-400 mb-1">Rationale</label><textarea name="rationale" rows={2} defaultValue={editing.rationale ?? ''} className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-sm" /></div>
-            <button type="submit" disabled={updateMut.isPending} className="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded-md text-sm font-medium disabled:opacity-50">{updateMut.isPending ? 'Saving...' : 'Save Changes'}</button>
+            <button type="submit" disabled={updateMut.isPending} className="w-full py-2 bg-[#D85A30] hover:bg-[#C04E28] rounded-md text-sm font-medium disabled:opacity-50">{updateMut.isPending ? 'Saving...' : 'Save Changes'}</button>
           </form>
         )}
       </Modal>
