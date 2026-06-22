@@ -1,11 +1,13 @@
 # ── Stage 1: Build React frontend ────────────────────────────────────────────
 FROM node:20-alpine AS frontend-build
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build
-# Output: /app/frontend/dist
+WORKDIR /app
+COPY frontend/package*.json ./frontend/
+COPY backend/src ./backend/src
+RUN cd frontend && npm ci
+COPY frontend/ ./frontend/
+# vite.config.ts sets outDir: ../backend/src/main/resources/static
+# So the build output lands directly in backend/src/main/resources/static
+RUN cd frontend && npm run build
 
 # ── Stage 2: Build Spring Boot backend ───────────────────────────────────────
 FROM eclipse-temurin:21-jdk-alpine AS backend-build
@@ -13,12 +15,9 @@ WORKDIR /app/backend
 COPY backend/mvnw backend/pom.xml ./
 COPY backend/.mvn .mvn
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
-COPY backend/src ./src
-# Inject built React dist into Spring Boot static resources
-# Spring Boot will serve React from / and API from /api/*
-COPY --from=frontend-build /app/frontend/dist ./src/main/resources/static
+# Copy backend src — already includes static/ from Stage 1 output
+COPY --from=frontend-build /app/backend/src ./src
 RUN ./mvnw clean package -DskipTests -q
-# Output: /app/backend/target/*.jar
 
 # ── Stage 3: Minimal runtime image ───────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine
