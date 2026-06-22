@@ -57,9 +57,7 @@ admin:
 groww:
   api:
     base-url: https://api.groww.in
-    access-token: ${GROWW_ACCESS_TOKEN:}
-    api-secret: ${GROWW_API_SECRET:}
-    enabled: ${GROWW_API_ENABLED:false}
+    enabled: ${GROWW_API_ENABLED:true}
 
 anthropic:
   api-key: ${ANTHROPIC_API_KEY:}

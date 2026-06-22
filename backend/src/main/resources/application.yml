@@ -45,7 +45,5 @@ admin:
 groww:
   api:
     base-url: https://api.groww.in
-    access-token: ${GROWW_ACCESS_TOKEN:}
-    api-secret: ${GROWW_API_SECRET:}
     api-version: "1.0"
     enabled: ${GROWW_API_ENABLED:false}
