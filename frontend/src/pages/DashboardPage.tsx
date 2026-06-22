@@ -39,7 +39,7 @@ function RunAnalysisButton({ onDone }: { onDone: () => void }) {
 }
 
 function GrowwOrdersSection({ orders }: { orders: Array<{ symbol: string; transactionType: string; status: string; quantity: number; filledQuantity: number; price: number; avgFillPrice: number; exchange: string }> }) {
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(true);
   const filtered = showAll ? orders : orders.filter((o) => o.status === 'EXECUTED');
 
   return (
