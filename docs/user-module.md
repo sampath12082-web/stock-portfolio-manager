@@ -16,7 +16,7 @@ JWT-based authentication system with email registration, OTP verification, secur
 ## Admin User
 
 - **Email**: `sampath12082@gmail.com`
-- **Default Password**: `Admin@123456789!` (configurable via `ADMIN_DEFAULT_PASSWORD` env var)
+- **Default Password**: `Admin@1234567890*` (configurable via `ADMIN_DEFAULT_PASSWORD` env var)
 - Seeded automatically on first startup by `AdminUserSeeder`
 - **Email verified**: YES (pre-verified on seed)
 - All existing portfolio data (stocks, holdings, transactions, MF) assigned to this user
@@ -388,7 +388,7 @@ Refresh Token (7 days):
 | `JWT_SECRET` | Yes | dev fallback | Base64-encoded HMAC signing key |
 | `JWT_EXPIRATION` | No | `900000` (15min) | Access token TTL in ms |
 | `JWT_REFRESH_EXPIRATION` | No | `604800000` (7d) | Refresh token TTL in ms |
-| `ADMIN_DEFAULT_PASSWORD` | No | `Admin@123456789!` | Initial admin password (must meet policy) |
+| `ADMIN_DEFAULT_PASSWORD` | No | `Admin@1234567890*` | Initial admin password (must meet policy) |
 | `SPRING_MAIL_HOST` | For OTP | `smtp.gmail.com` | SMTP server |
 | `SPRING_MAIL_PORT` | For OTP | `587` | SMTP port |
 | `SPRING_MAIL_USERNAME` | For OTP | — | SMTP username |

@@ -62,7 +62,7 @@ echo "Built:  $(ls backend/src/main/resources/static/assets/index-*.js | xargs b
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"sampath12082@gmail.com","password":"Admin@123"}' \
+  -d '{"email":"sampath12082@gmail.com","password":"Admin@1234567890*"}' \
   | python -c "import json,sys; print(json.load(sys.stdin)['accessToken'])")
 ```
 
@@ -112,7 +112,7 @@ Scripts auto-login as admin before importing.
 ```bash
 cd backend && ./mvnw spring-boot:run
 # Open http://localhost:8081
-# Login: sampath12082@gmail.com / Admin@123
+# Login: sampath12082@gmail.com / Admin@1234567890*
 ```
 
 For frontend dev server with hot reload:
@@ -138,7 +138,7 @@ export GROWW_API_ENABLED=true
 export GROWW_ACCESS_TOKEN="<groww-key>"       # daily renewal
 export GROWW_API_SECRET="<groww-secret>"
 export JWT_SECRET="<base64-key>"
-export ADMIN_DEFAULT_PASSWORD="Admin@123"
+export ADMIN_DEFAULT_PASSWORD="Admin@1234567890*"
 export SPRING_MAIL_USERNAME="<email>"
 export SPRING_MAIL_PASSWORD="<app-password>"
 ```

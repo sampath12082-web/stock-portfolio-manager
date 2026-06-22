@@ -11,10 +11,12 @@ Pass token as: `Authorization: Bearer <accessToken>`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/auth/register` | Register with email + password + name → sends OTP |
+| GET | `/api/auth/public-key` | Get RSA public key (PEM) for password encryption |
+| POST | `/api/auth/register` | Register with email + password + name + 2 security questions |
 | POST | `/api/auth/verify-otp` | Verify email OTP (6-digit, 10-min expiry) |
 | POST | `/api/auth/login` | Login → JWT access token (15min) + refresh token (7d) |
-| POST | `/api/auth/forgot-password` | Send password reset OTP to email |
+| POST | `/api/auth/forgot-password` | Returns security questions for the email |
+| POST | `/api/auth/verify-security` | Verify security answers → sends OTP to email |
 | POST | `/api/auth/reset-password` | Verify OTP + set new password |
 | POST | `/api/auth/change-password` | Change password (requires current password) |
 | POST | `/api/auth/refresh` | Refresh access token using refresh token |
@@ -25,6 +27,9 @@ Pass token as: `Authorization: Bearer <accessToken>`
 |--------|----------|-------------|
 | GET | `/api/profile` | Get own profile |
 | PUT | `/api/profile` | Update name, phone (email immutable) |
+| GET | `/api/profile/groww` | View own Groww config (masked — hasAccessToken/hasApiSecret) |
+| PUT | `/api/profile/groww` | Set Groww access token + secret + enabled |
+| DELETE | `/api/profile/groww` | Remove Groww credentials |
 
 ## Admin APIs (ROLE_ADMIN only)
 

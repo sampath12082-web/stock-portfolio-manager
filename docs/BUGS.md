@@ -2,9 +2,6 @@
 
 ## Open Bugs
 
-| # | Severity | Bug | Root Cause | Status |
-None — all bugs resolved.
-|---|----------|-----|-----------|--------|
 None — all bugs resolved.
 
 ## Resolved Bugs

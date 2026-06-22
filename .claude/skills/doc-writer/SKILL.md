@@ -77,7 +77,7 @@ ls -1 docs/
 ```bash
 TOKEN=$(curl -s -X POST http://localhost:8081/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"sampath12082@gmail.com","password":"Admin@123"}' \
+  -d '{"email":"sampath12082@gmail.com","password":"Admin@1234567890*"}' \
   | python -c "import json,sys; print(json.load(sys.stdin)['accessToken'])")
 
 echo "=== Data Counts ==="
