@@ -18,6 +18,7 @@ import com.stocks.myportfolio.entity.Holding;
 import com.stocks.myportfolio.entity.Stock;
 import com.stocks.myportfolio.integration.StockQuoteData;
 import com.stocks.myportfolio.repository.HoldingRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.MarketDataService;
 import com.stocks.myportfolio.service.PortfolioService;
 
@@ -26,18 +27,20 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     private final HoldingRepository holdingRepository;
     private final MarketDataService marketDataService;
+    private final CurrentUserProvider currentUser;
 
     public PortfolioServiceImpl(
             HoldingRepository holdingRepository,
-            MarketDataService marketDataService) {
+            MarketDataService marketDataService, CurrentUserProvider currentUser) {
 
         this.holdingRepository = holdingRepository;
         this.marketDataService = marketDataService;
+        this.currentUser = currentUser;
     }
 
     @Override
     public PortfolioSummaryResponse getPortfolioSummary() {
-        List<Holding> holdings = holdingRepository.findAll();
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
         Map<String, StockQuoteData> prices = fetchPrices();
 
         BigDecimal totalInvestment = BigDecimal.ZERO;
@@ -81,7 +84,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     @Override
     public List<SectorAllocationResponse> getSectorAllocation() {
-        List<Holding> holdings = holdingRepository.findAll().stream()
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId()).stream()
                 .filter(h -> h.getQuantity() > 0)
                 .toList();
         Map<String, StockQuoteData> prices = fetchPrices();
@@ -130,7 +133,7 @@ public class PortfolioServiceImpl implements PortfolioService {
 
     @Override
     public List<StockPnLResponse> getStockWisePnL() {
-        List<Holding> holdings = holdingRepository.findAll();
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
         Map<String, StockQuoteData> prices = fetchPrices();
 
         List<StockPnLResponse> result = new ArrayList<>();

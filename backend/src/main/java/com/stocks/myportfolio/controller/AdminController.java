@@ -1,5 +1,6 @@
 package com.stocks.myportfolio.controller;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +52,14 @@ public class AdminController {
     @PostMapping("/users/{id}/reset-password")
     public Map<String, String> resetPassword(@PathVariable Long id) {
         User user = findUser(id);
-        String tempPassword = "Reset@" + System.currentTimeMillis() % 10000;
+        SecureRandom random = new SecureRandom();
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+        String special = "@#$%&*!";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 14; i++) sb.append(chars.charAt(random.nextInt(chars.length())));
+        sb.insert(4, special.charAt(random.nextInt(special.length())));
+        sb.insert(10, random.nextInt(10));
+        String tempPassword = sb.toString();
         user.setPasswordHash(passwordEncoder.encode(tempPassword));
         userRepository.save(user);
         return Map.of("message", "Password reset", "temporaryPassword", tempPassword);

@@ -54,6 +54,9 @@ public class TradingSignal extends BaseEntity {
     @Column(length = 20)
     private SignalSource source = SignalSource.MANUAL;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public TradingSignal() {
     }
 
@@ -148,4 +151,6 @@ public class TradingSignal extends BaseEntity {
     public void setSource(SignalSource source) {
         this.source = source;
     }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

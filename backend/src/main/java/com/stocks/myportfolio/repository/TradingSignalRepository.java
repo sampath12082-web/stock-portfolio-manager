@@ -27,4 +27,5 @@ public interface TradingSignalRepository extends JpaRepository<TradingSignal, Lo
 
     List<TradingSignal> findByStatusAndSignalDateBefore(
             SignalStatus status, LocalDate date);
+    List<TradingSignal> findByUserId(Long userId);
 }

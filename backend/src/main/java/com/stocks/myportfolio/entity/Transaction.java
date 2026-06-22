@@ -44,6 +44,9 @@ public class Transaction extends BaseEntity {
     @Column(name = "trade_type")
     private TradeType tradeType;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public Transaction() {
     }
 
@@ -122,4 +125,6 @@ public class Transaction extends BaseEntity {
     public void setTradeType(TradeType tradeType) {
         this.tradeType = tradeType;
     }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

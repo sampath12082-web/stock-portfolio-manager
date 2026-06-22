@@ -20,4 +20,6 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     List<Stock> findByExchange(com.stocks.myportfolio.common.enums.Exchange exchange);
 
     List<Stock> findBySectorIgnoreCase(String sector);
+
+    List<Stock> findByUserId(Long userId);
 }

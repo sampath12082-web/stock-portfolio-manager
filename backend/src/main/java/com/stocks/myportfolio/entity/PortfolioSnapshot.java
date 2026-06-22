@@ -37,6 +37,9 @@ public class PortfolioSnapshot extends BaseEntity {
     @Column(name = "top_loser")
     private String topLoser;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public PortfolioSnapshot() {
     }
 
@@ -107,4 +110,6 @@ public class PortfolioSnapshot extends BaseEntity {
     public void setTopLoser(String topLoser) {
         this.topLoser = topLoser;
     }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

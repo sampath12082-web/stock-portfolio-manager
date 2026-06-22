@@ -27,6 +27,9 @@ public class MfHolding extends BaseEntity {
     @Column(name = "invested_amount", nullable = false)
     private BigDecimal investedAmount;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public MfHolding() {}
 
     public Long getId() { return id; }
@@ -38,4 +41,6 @@ public class MfHolding extends BaseEntity {
     public void setAverageNav(BigDecimal averageNav) { this.averageNav = averageNav; }
     public BigDecimal getInvestedAmount() { return investedAmount; }
     public void setInvestedAmount(BigDecimal investedAmount) { this.investedAmount = investedAmount; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

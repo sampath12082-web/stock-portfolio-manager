@@ -14,7 +14,9 @@ import com.stocks.myportfolio.dto.response.StockResponse;
 import com.stocks.myportfolio.entity.Stock;
 import com.stocks.myportfolio.mapper.StockMapper;
 import com.stocks.myportfolio.repository.HoldingRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.StockRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.StockLookupService;
 import com.stocks.myportfolio.service.StockService;
 
@@ -26,18 +28,21 @@ public class StockServiceImpl implements StockService {
     private final StockRepository stockRepository;
     private final HoldingRepository holdingRepository;
     private final StockMapper stockMapper;
+    private final CurrentUserProvider currentUser;
     private final StockLookupService stockLookupService;
 
     public StockServiceImpl(
             StockRepository stockRepository,
             HoldingRepository holdingRepository,
             StockMapper stockMapper,
-            StockLookupService stockLookupService) {
+            StockLookupService stockLookupService,
+            CurrentUserProvider currentUser) {
 
         this.stockRepository = stockRepository;
         this.holdingRepository = holdingRepository;
         this.stockMapper = stockMapper;
         this.stockLookupService = stockLookupService;
+        this.currentUser = currentUser;
     }
 
     @Override
@@ -65,7 +70,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public List<StockResponse> getAllStocks() {
-        return stockMapper.toResponseList(stockRepository.findAll());
+        return stockMapper.toResponseList(stockRepository.findByUserId(currentUser.getUserId()));
     }
 
     @Override
@@ -84,7 +89,7 @@ public class StockServiceImpl implements StockService {
             return stockMapper.toResponseList(
                     stockRepository.findBySectorIgnoreCase(sector));
         }
-        return stockMapper.toResponseList(stockRepository.findAll());
+        return stockMapper.toResponseList(stockRepository.findByUserId(currentUser.getUserId()));
     }
 
     @Override
@@ -143,7 +148,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public int refreshSectorData() {
-        List<Stock> needsSector = stockRepository.findAll().stream()
+        List<Stock> needsSector = stockRepository.findByUserId(currentUser.getUserId()).stream()
                 .filter(s -> s.getSector() == null || s.getSector().isBlank())
                 .toList();
 

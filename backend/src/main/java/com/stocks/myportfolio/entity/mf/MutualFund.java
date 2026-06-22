@@ -39,6 +39,9 @@ public class MutualFund extends BaseEntity {
     @Column(name = "nav_date")
     private LocalDate navDate;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public MutualFund() {}
 
     public Long getId() { return id; }
@@ -58,4 +61,6 @@ public class MutualFund extends BaseEntity {
     public void setCurrentNav(BigDecimal currentNav) { this.currentNav = currentNav; }
     public LocalDate getNavDate() { return navDate; }
     public void setNavDate(LocalDate navDate) { this.navDate = navDate; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

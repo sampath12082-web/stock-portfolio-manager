@@ -20,4 +20,5 @@ public interface PortfolioSnapshotRepository extends JpaRepository<PortfolioSnap
     Optional<PortfolioSnapshot> findTopByOrderBySnapshotDateDesc();
 
     List<PortfolioSnapshot> findTop30ByOrderBySnapshotDateDesc();
+    List<PortfolioSnapshot> findByUserId(Long userId);
 }

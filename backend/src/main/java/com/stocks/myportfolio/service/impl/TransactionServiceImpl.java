@@ -23,8 +23,11 @@ import com.stocks.myportfolio.entity.Holding;
 import com.stocks.myportfolio.entity.Stock;
 import com.stocks.myportfolio.entity.Transaction;
 import com.stocks.myportfolio.repository.HoldingRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.StockRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.TransactionRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.TransactionService;
 
 @Service
@@ -34,15 +37,18 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final StockRepository stockRepository;
     private final HoldingRepository holdingRepository;
+    private final CurrentUserProvider currentUser;
 
     public TransactionServiceImpl(
             TransactionRepository transactionRepository,
             StockRepository stockRepository,
-            HoldingRepository holdingRepository) {
+            HoldingRepository holdingRepository,
+            CurrentUserProvider currentUser) {
 
         this.transactionRepository = transactionRepository;
         this.stockRepository = stockRepository;
         this.holdingRepository = holdingRepository;
+        this.currentUser = currentUser;
     }
 
     @Override
@@ -138,7 +144,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional(readOnly = true)
     public TransactionAnalyticsResponse getAnalytics() {
-        List<Transaction> all = transactionRepository.findAll();
+        List<Transaction> all = transactionRepository.findByUserId(currentUser.getUserId());
 
         BigDecimal totalBuyAmount = BigDecimal.ZERO;
         BigDecimal totalSellAmount = BigDecimal.ZERO;

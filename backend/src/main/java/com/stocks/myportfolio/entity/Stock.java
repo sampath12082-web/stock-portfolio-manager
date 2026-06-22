@@ -24,6 +24,9 @@ public class Stock extends BaseEntity {
 
     private String industry;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public Stock() {
     }
 
@@ -70,4 +73,7 @@ public class Stock extends BaseEntity {
     public void setIndustry(String industry) {
         this.industry = industry;
     }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

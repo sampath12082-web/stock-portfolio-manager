@@ -17,4 +17,5 @@ public interface MfTransactionRepository extends JpaRepository<MfTransaction, Lo
     List<MfTransaction> findByMutualFundOrderByTradeDateDesc(MutualFund fund);
 
     List<MfTransaction> findByTransactionTypeOrderByTradeDateDesc(MfTransactionType type);
+    List<MfTransaction> findByUserIdOrderByTradeDateDesc(Long userId);
 }

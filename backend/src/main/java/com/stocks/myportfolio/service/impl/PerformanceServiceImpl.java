@@ -15,7 +15,9 @@ import com.stocks.myportfolio.entity.Holding;
 import com.stocks.myportfolio.entity.PortfolioSnapshot;
 import com.stocks.myportfolio.integration.StockQuoteData;
 import com.stocks.myportfolio.repository.HoldingRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.PortfolioSnapshotRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.MarketDataService;
 import com.stocks.myportfolio.service.PerformanceService;
 
@@ -25,15 +27,17 @@ public class PerformanceServiceImpl implements PerformanceService {
     private final PortfolioSnapshotRepository snapshotRepository;
     private final HoldingRepository holdingRepository;
     private final MarketDataService marketDataService;
+    private final CurrentUserProvider currentUser;
 
     public PerformanceServiceImpl(
             PortfolioSnapshotRepository snapshotRepository,
             HoldingRepository holdingRepository,
-            MarketDataService marketDataService) {
+            MarketDataService marketDataService, CurrentUserProvider currentUser) {
 
         this.snapshotRepository = snapshotRepository;
         this.holdingRepository = holdingRepository;
         this.marketDataService = marketDataService;
+        this.currentUser = currentUser;
     }
 
     @Override
@@ -70,7 +74,7 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     private PortfolioSnapshot createSnapshot(LocalDate date) {
-        List<Holding> holdings = holdingRepository.findAll().stream()
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId()).stream()
                 .filter(h -> h.getQuantity() > 0)
                 .toList();
 

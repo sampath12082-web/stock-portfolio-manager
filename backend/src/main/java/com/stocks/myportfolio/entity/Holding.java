@@ -25,6 +25,9 @@ public class Holding extends BaseEntity {
     @Column(nullable = false)
     private BigDecimal investedAmount;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public Holding() {
     }
 
@@ -63,4 +66,7 @@ public class Holding extends BaseEntity {
     public void setInvestedAmount(BigDecimal investedAmount) {
         this.investedAmount = investedAmount;
     }
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

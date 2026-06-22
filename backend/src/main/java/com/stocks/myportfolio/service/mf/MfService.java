@@ -26,6 +26,7 @@ import com.stocks.myportfolio.entity.mf.MutualFund;
 import com.stocks.myportfolio.repository.mf.MfHoldingRepository;
 import com.stocks.myportfolio.repository.mf.MfTransactionRepository;
 import com.stocks.myportfolio.repository.mf.MutualFundRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 
 @Service
 @Transactional
@@ -34,13 +35,16 @@ public class MfService {
     private final MutualFundRepository fundRepository;
     private final MfHoldingRepository holdingRepository;
     private final MfTransactionRepository transactionRepository;
+    private final CurrentUserProvider currentUser;
 
     public MfService(MutualFundRepository fundRepository,
                      MfHoldingRepository holdingRepository,
-                     MfTransactionRepository transactionRepository) {
+                     MfTransactionRepository transactionRepository,
+                     CurrentUserProvider currentUser) {
         this.fundRepository = fundRepository;
         this.holdingRepository = holdingRepository;
         this.transactionRepository = transactionRepository;
+        this.currentUser = currentUser;
     }
 
     public MfFundResponse createFund(CreateMfRequest request) {
@@ -60,7 +64,9 @@ public class MfService {
 
     @Transactional(readOnly = true)
     public List<MfFundResponse> getAllFunds() {
-        return fundRepository.findAll().stream().map(this::toFundResponse).toList();
+        Long uid = currentUser.getUserId();
+        return (uid != null ? fundRepository.findByUserId(uid) : fundRepository.findAll())
+                .stream().map(this::toFundResponse).toList();
     }
 
     public void deleteFund(Long id) {
@@ -92,10 +98,10 @@ public class MfService {
 
     @Transactional(readOnly = true)
     public List<MfHoldingResponse> getAllHoldings() {
-        return holdingRepository.findAll().stream()
-                .filter(h -> h.getUnits().compareTo(BigDecimal.ZERO) > 0)
-                .map(this::toHoldingResponse)
-                .toList();
+        Long uid = currentUser.getUserId();
+        return (uid != null ? holdingRepository.findByUserId(uid) : holdingRepository.findAll())
+                .stream().filter(h -> h.getUnits().compareTo(BigDecimal.ZERO) > 0)
+                .map(this::toHoldingResponse).toList();
     }
 
     public MfTransactionResponse createTransaction(CreateMfTransactionRequest request) {

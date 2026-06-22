@@ -41,6 +41,9 @@ public class MfTransaction extends BaseEntity {
     @Column(name = "folio_number", length = 50)
     private String folioNumber;
 
+    @Column(name = "user_id")
+    private Long userId;
+
     public MfTransaction() {}
 
     public Long getId() { return id; }
@@ -60,4 +63,6 @@ public class MfTransaction extends BaseEntity {
     public void setTradeDate(LocalDateTime tradeDate) { this.tradeDate = tradeDate; }
     public String getFolioNumber() { return folioNumber; }
     public void setFolioNumber(String folioNumber) { this.folioNumber = folioNumber; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }

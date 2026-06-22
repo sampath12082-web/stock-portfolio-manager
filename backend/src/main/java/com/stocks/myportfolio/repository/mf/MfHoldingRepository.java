@@ -1,5 +1,6 @@
 package com.stocks.myportfolio.repository.mf;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,5 @@ import com.stocks.myportfolio.entity.mf.MutualFund;
 public interface MfHoldingRepository extends JpaRepository<MfHolding, Long> {
 
     Optional<MfHolding> findByMutualFund(MutualFund mutualFund);
+    List<MfHolding> findByUserId(Long userId);
 }

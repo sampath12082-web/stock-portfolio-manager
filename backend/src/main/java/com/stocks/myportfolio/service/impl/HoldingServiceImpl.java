@@ -21,6 +21,7 @@ import com.stocks.myportfolio.integration.StockQuoteData;
 import com.stocks.myportfolio.mapper.HoldingMapper;
 import com.stocks.myportfolio.repository.HoldingRepository;
 import com.stocks.myportfolio.repository.StockRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.HoldingService;
 import com.stocks.myportfolio.service.MarketDataService;
 
@@ -33,17 +34,20 @@ public class HoldingServiceImpl implements HoldingService {
     private final StockRepository stockRepository;
     private final HoldingMapper holdingMapper;
     private final MarketDataService marketDataService;
+    private final CurrentUserProvider currentUser;
 
     public HoldingServiceImpl(
             HoldingRepository holdingRepository,
             StockRepository stockRepository,
             HoldingMapper holdingMapper,
-            MarketDataService marketDataService) {
+            MarketDataService marketDataService,
+            CurrentUserProvider currentUser) {
 
         this.holdingRepository = holdingRepository;
         this.stockRepository = stockRepository;
         this.holdingMapper = holdingMapper;
         this.marketDataService = marketDataService;
+        this.currentUser = currentUser;
     }
 
     @Override
@@ -89,7 +93,8 @@ public class HoldingServiceImpl implements HoldingService {
 
     @Override
     public List<HoldingResponse> getAllHoldings() {
-        List<Holding> holdings = holdingRepository.findAll();
+        Long uid = currentUser.getUserId();
+        List<Holding> holdings = uid != null ? holdingRepository.findByUserId(uid) : holdingRepository.findAll();
         Map<String, StockQuoteData> prices;
 
         try {

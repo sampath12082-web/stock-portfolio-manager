@@ -16,7 +16,9 @@ import com.stocks.myportfolio.entity.Holding;
 import com.stocks.myportfolio.entity.Transaction;
 import com.stocks.myportfolio.integration.StockQuoteData;
 import com.stocks.myportfolio.repository.HoldingRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.TransactionRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.DashboardService;
 import com.stocks.myportfolio.service.MarketDataService;
 
@@ -28,20 +30,23 @@ public class DashboardServiceImpl implements DashboardService {
     private final HoldingRepository holdingRepository;
     private final TransactionRepository transactionRepository;
     private final MarketDataService marketDataService;
+    private final CurrentUserProvider currentUser;
 
     public DashboardServiceImpl(
             HoldingRepository holdingRepository,
             TransactionRepository transactionRepository,
-            MarketDataService marketDataService) {
+            MarketDataService marketDataService,
+            CurrentUserProvider currentUser) {
 
         this.holdingRepository = holdingRepository;
         this.transactionRepository = transactionRepository;
         this.marketDataService = marketDataService;
+        this.currentUser = currentUser;
     }
 
     @Override
     public DashboardResponse getDashboard() {
-        List<Holding> activeHoldings = holdingRepository.findAll().stream()
+        List<Holding> activeHoldings = holdingRepository.findByUserId(currentUser.getUserId()).stream()
                 .filter(h -> h.getQuantity() > 0)
                 .toList();
 
@@ -72,7 +77,7 @@ public class DashboardServiceImpl implements DashboardService {
         BigDecimal unrealizedPnLPercentage = CalculationUtils.calculatePnLPercentage(
                 unrealizedPnL, totalInvestment);
 
-        BigDecimal totalDeposited = transactionRepository.findAll().stream()
+        BigDecimal totalDeposited = transactionRepository.findByUserId(currentUser.getUserId()).stream()
                 .filter(t -> t.getTransactionType() == TransactionType.DEPOSIT)
                 .map(Transaction::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
