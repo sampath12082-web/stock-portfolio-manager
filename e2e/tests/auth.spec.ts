@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const BASE = 'http://localhost:8081';
 const ADMIN_EMAIL = 'sampath12082@gmail.com';
-const ADMIN_PASSWORD = 'Admin@123';
+const ADMIN_PASSWORD = 'Admin@1234567890*';
 
 test.describe('Auth — Smoke Tests', () => {
   test('auth endpoints are publicly accessible (not 401/403)', async ({ request }) => {
@@ -79,25 +79,36 @@ test.describe('Auth — Login Flow', () => {
 });
 
 test.describe('Auth — Registration', () => {
+  const validRegData = {
+    email: ADMIN_EMAIL, password: 'TestPassword@12345', firstName: 'Test',
+    securityQuestion1: 'What city were you born in?', securityAnswer1: 'TestCity',
+    securityQuestion2: 'What is your favorite movie?', securityAnswer2: 'TestMovie',
+  };
+
   test('register with duplicate email returns 409', async ({ request }) => {
-    const resp = await request.post('/api/auth/register', {
-      data: { email: ADMIN_EMAIL, password: 'TestPassword@1234', firstName: 'Test' },
-    });
+    const resp = await request.post('/api/auth/register', { data: validRegData });
     expect(resp.status()).toBe(409);
   });
 
   test('register with invalid email returns 400', async ({ request }) => {
     const resp = await request.post('/api/auth/register', {
-      data: { email: 'not-an-email', password: 'TestPassword@1234', firstName: 'Test' },
+      data: { ...validRegData, email: 'not-an-email' },
     });
     expect(resp.status()).toBe(400);
   });
 
   test('register with short password returns 400', async ({ request }) => {
     const resp = await request.post('/api/auth/register', {
-      data: { email: 'new@example.com', password: '123', firstName: 'Test' },
+      data: { ...validRegData, email: 'new@example.com', password: '123' },
     });
     expect(resp.status()).toBe(400);
+  });
+
+  test('RSA public key endpoint returns PEM key', async ({ request }) => {
+    const resp = await request.get('/api/auth/public-key');
+    expect(resp.status()).toBe(200);
+    const body = await resp.json();
+    expect(body.publicKey).toContain('BEGIN PUBLIC KEY');
   });
 });
 

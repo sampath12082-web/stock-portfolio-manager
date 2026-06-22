@@ -30,14 +30,22 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final com.stocks.myportfolio.service.RsaKeyService rsaKeyService;
 
     public AuthServiceImpl(UserRepository userRepository, OtpTokenRepository otpTokenRepository,
-            PasswordEncoder passwordEncoder, JwtService jwtService, EmailService emailService) {
+            PasswordEncoder passwordEncoder, JwtService jwtService, EmailService emailService,
+            com.stocks.myportfolio.service.RsaKeyService rsaKeyService) {
         this.userRepository = userRepository;
         this.otpTokenRepository = otpTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.rsaKeyService = rsaKeyService;
+    }
+
+    private String decryptIfEncrypted(String value) {
+        if (value == null) return null;
+        return rsaKeyService.decrypt(value);
     }
 
     private static final java.util.regex.Pattern PASSWORD_PATTERN =
@@ -52,19 +60,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponse register(RegisterRequest request) {
-        validatePassword(request.password());
+        String plainPassword = decryptIfEncrypted(request.password());
+        validatePassword(plainPassword);
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("Email already registered: " + request.email());
         }
 
         User user = new User();
         user.setEmail(request.email().toLowerCase().trim());
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setPasswordHash(passwordEncoder.encode(plainPassword));
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setRole("ROLE_USER");
         user.setStatus("ACTIVE");
         user.setEmailVerified(false);
+        user.setSecurityQuestion1(request.securityQuestion1());
+        user.setSecurityAnswer1Hash(passwordEncoder.encode(request.securityAnswer1().toLowerCase().trim()));
+        user.setSecurityQuestion2(request.securityQuestion2());
+        user.setSecurityAnswer2Hash(passwordEncoder.encode(request.securityAnswer2().toLowerCase().trim()));
 
         User saved = userRepository.save(user);
         sendOtp(saved.getEmail(), "REGISTRATION");
@@ -77,7 +90,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.email().toLowerCase().trim())
                 .orElseThrow(() -> new ValidationException("Invalid email or password"));
 
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        String loginPassword = decryptIfEncrypted(request.password());
+        if (!passwordEncoder.matches(loginPassword, user.getPasswordHash())) {
             throw new ValidationException("Invalid email or password");
         }
 
@@ -112,10 +126,30 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void forgotPassword(ForgotPasswordRequest request) {
-        if (!userRepository.existsByEmail(request.email().toLowerCase().trim())) {
-            return;
+        // No-op: security questions flow handled by getSecurityQuestions + verifySecurityAnswers
+    }
+
+    public java.util.Map<String, String> getSecurityQuestions(String email) {
+        User user = userRepository.findByEmail(email.toLowerCase().trim())
+                .orElseThrow(() -> new ValidationException("No account found with this email"));
+        if (user.getSecurityQuestion1() == null) {
+            throw new ValidationException("No security questions set for this account");
         }
-        sendOtp(request.email().toLowerCase().trim(), "PASSWORD_RESET");
+        return java.util.Map.of(
+                "securityQuestion1", user.getSecurityQuestion1(),
+                "securityQuestion2", user.getSecurityQuestion2());
+    }
+
+    public void verifySecurityAnswers(String email, String answer1, String answer2) {
+        User user = userRepository.findByEmail(email.toLowerCase().trim())
+                .orElseThrow(() -> new ValidationException("No account found"));
+        if (!passwordEncoder.matches(answer1.toLowerCase().trim(), user.getSecurityAnswer1Hash())) {
+            throw new ValidationException("Security answer 1 is incorrect");
+        }
+        if (!passwordEncoder.matches(answer2.toLowerCase().trim(), user.getSecurityAnswer2Hash())) {
+            throw new ValidationException("Security answer 2 is incorrect");
+        }
+        sendOtp(email.toLowerCase().trim(), "PASSWORD_RESET");
     }
 
     @Override
@@ -129,8 +163,9 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByEmail(request.email().toLowerCase().trim())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        validatePassword(request.newPassword());
-        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        String newPw = decryptIfEncrypted(request.newPassword());
+        validatePassword(newPw);
+        user.setPasswordHash(passwordEncoder.encode(newPw));
         userRepository.save(user);
     }
 
@@ -139,12 +174,14 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+        String currentPw = decryptIfEncrypted(request.currentPassword());
+        if (!passwordEncoder.matches(currentPw, user.getPasswordHash())) {
             throw new ValidationException("Current password is incorrect");
         }
 
-        validatePassword(request.newPassword());
-        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        String changePw = decryptIfEncrypted(request.newPassword());
+        validatePassword(changePw);
+        user.setPasswordHash(passwordEncoder.encode(changePw));
         userRepository.save(user);
     }
 

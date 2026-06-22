@@ -18,7 +18,7 @@ from datetime import datetime
 BASE_URL = "http://localhost:8081/api"
 AUTH_HEADERS = {}
 
-def login(email="sampath12082@gmail.com", password="Admin@123"):
+def login(email="sampath12082@gmail.com", password="Admin@1234567890*"):
     """Login and set auth headers globally."""
     global AUTH_HEADERS
     resp = requests.post(f"{BASE_URL}/auth/login", json={"email": email, "password": password}, timeout=10)

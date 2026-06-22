@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import com.stocks.myportfolio.common.exception.ResourceNotFoundException;
 import com.stocks.myportfolio.dto.response.auth.UserResponse;
 import com.stocks.myportfolio.entity.User;
+import com.stocks.myportfolio.entity.UserGrowwConfig;
+import com.stocks.myportfolio.repository.UserGrowwConfigRepository;
 import com.stocks.myportfolio.repository.UserRepository;
 
 @RestController
@@ -15,9 +17,11 @@ import com.stocks.myportfolio.repository.UserRepository;
 public class ProfileController {
 
     private final UserRepository userRepository;
+    private final UserGrowwConfigRepository growwConfigRepository;
 
-    public ProfileController(UserRepository userRepository) {
+    public ProfileController(UserRepository userRepository, UserGrowwConfigRepository growwConfigRepository) {
         this.userRepository = userRepository;
+        this.growwConfigRepository = growwConfigRepository;
     }
 
     @GetMapping
@@ -34,6 +38,39 @@ public class ProfileController {
         if (body.containsKey("phone")) user.setPhone(body.get("phone"));
         userRepository.save(user);
         return toResponse(user);
+    }
+
+    @GetMapping("/groww")
+    public Map<String, Object> getGrowwConfig(Principal principal) {
+        User user = findUser(principal.getName());
+        return growwConfigRepository.findByUser(user)
+                .map(c -> Map.<String, Object>of(
+                        "enabled", c.isEnabled(),
+                        "hasAccessToken", c.getAccessTokenEncrypted() != null,
+                        "hasApiSecret", c.getApiSecretEncrypted() != null))
+                .orElse(Map.of("enabled", false, "hasAccessToken", false, "hasApiSecret", false));
+    }
+
+    @PutMapping("/groww")
+    public Map<String, Object> updateGrowwConfig(Principal principal, @RequestBody Map<String, String> body) {
+        User user = findUser(principal.getName());
+        UserGrowwConfig config = growwConfigRepository.findByUser(user).orElseGet(() -> {
+            UserGrowwConfig c = new UserGrowwConfig();
+            c.setUser(user);
+            return c;
+        });
+        if (body.containsKey("accessToken")) config.setAccessTokenEncrypted(body.get("accessToken"));
+        if (body.containsKey("apiSecret")) config.setApiSecretEncrypted(body.get("apiSecret"));
+        if (body.containsKey("enabled")) config.setEnabled(Boolean.parseBoolean(body.get("enabled")));
+        growwConfigRepository.save(config);
+        return Map.of("message", "Groww config updated", "enabled", config.isEnabled());
+    }
+
+    @DeleteMapping("/groww")
+    public Map<String, String> deleteGrowwConfig(Principal principal) {
+        User user = findUser(principal.getName());
+        growwConfigRepository.findByUser(user).ifPresent(growwConfigRepository::delete);
+        return Map.of("message", "Groww config removed");
     }
 
     private User findUser(String email) {

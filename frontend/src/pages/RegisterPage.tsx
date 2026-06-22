@@ -3,7 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '' });
+  const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '', securityQuestion1: '', securityAnswer1: '', securityQuestion2: '', securityAnswer2: '' });
+  const securityQuestions = [
+    'What is your mother\'s maiden name?',
+    'What was the name of your first pet?',
+    'What city were you born in?',
+    'What is the name of your first school?',
+    'What is your favorite movie?',
+    'What was your childhood nickname?',
+    'What is the name of the street you grew up on?',
+    'What is your favorite book?',
+  ];
   const [otpStep, setOtpStep] = useState(false);
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
@@ -70,8 +80,34 @@ export default function RegisterPage() {
                   className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Password (min 6 characters)</label>
-                <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6}
+                <label className="block text-sm text-gray-600 mb-1">Password (16-20 chars, upper+lower+digit+special)</label>
+                <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={16} maxLength={20}
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Security Question 1</label>
+                <select value={form.securityQuestion1} onChange={(e) => setForm({ ...form, securityQuestion1: e.target.value })} required
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm">
+                  <option value="">Select a question...</option>
+                  {securityQuestions.map(q => <option key={q} value={q}>{q}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Answer 1</label>
+                <input type="text" value={form.securityAnswer1} onChange={(e) => setForm({ ...form, securityAnswer1: e.target.value })} required
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Security Question 2</label>
+                <select value={form.securityQuestion2} onChange={(e) => setForm({ ...form, securityQuestion2: e.target.value })} required
+                  className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm">
+                  <option value="">Select a question...</option>
+                  {securityQuestions.filter(q => q !== form.securityQuestion1).map(q => <option key={q} value={q}>{q}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Answer 2</label>
+                <input type="text" value={form.securityAnswer2} onChange={(e) => setForm({ ...form, securityAnswer2: e.target.value })} required
                   className="w-full bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <button type="submit" disabled={loading}

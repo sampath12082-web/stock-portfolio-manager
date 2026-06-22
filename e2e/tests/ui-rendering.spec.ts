@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 const ADMIN_EMAIL = 'sampath12082@gmail.com';
-const ADMIN_PASSWORD = 'Admin@123';
+const ADMIN_PASSWORD = 'Admin@1234567890*';
 
 async function loginViaUI(page: Page) {
   await page.goto('/login');

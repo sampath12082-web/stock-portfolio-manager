@@ -98,12 +98,16 @@ test.describe('Regression — Security', () => {
 
   test('admin endpoint returns 403 for regular user', async ({ request }) => {
     // Register a test user
+    const testEmail = `test${Date.now()}@example.com`;
+    const testPassword = 'TestPassword@12345';
     const regResp = await request.post('/api/auth/register', {
-      data: { email: `test${Date.now()}@example.com`, password: 'Test@123', firstName: 'Test' },
+      data: { email: testEmail, password: testPassword, firstName: 'Test',
+        securityQuestion1: 'What city were you born in?', securityAnswer1: 'City',
+        securityQuestion2: 'What is your favorite movie?', securityAnswer2: 'Movie' },
     });
     if (regResp.status() === 201) {
       const loginResp = await request.post('/api/auth/login', {
-        data: { email: (await regResp.json()).email, password: 'Test@123' },
+        data: { email: testEmail, password: testPassword },
       });
       if (loginResp.status() === 200) {
         const { accessToken } = await loginResp.json();

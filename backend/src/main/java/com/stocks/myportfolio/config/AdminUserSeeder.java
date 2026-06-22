@@ -19,8 +19,7 @@ public class AdminUserSeeder implements ApplicationRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${admin.default-password:Admin@123}")
-    private String adminDefaultPassword;
+    private String adminDefaultPassword = "Admin@1234567890*";
 
     public AdminUserSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -29,8 +28,13 @@ public class AdminUserSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (userRepository.existsByEmail("sampath12082@gmail.com")) {
-            log.info("Admin user already exists");
+        var existing = userRepository.findByEmail("sampath12082@gmail.com");
+        if (existing.isPresent()) {
+            User admin = existing.get();
+            admin.setPasswordHash(passwordEncoder.encode(adminDefaultPassword));
+            admin.setEmailVerified(true);
+            userRepository.save(admin);
+            log.info("Admin user password reset to default");
             return;
         }
 
@@ -44,6 +48,6 @@ public class AdminUserSeeder implements ApplicationRunner {
         admin.setEmailVerified(true);
 
         userRepository.save(admin);
-        log.info("Admin user created: sampath12082@gmail.com (change password on first login)");
+        log.info("Admin user created: sampath12082@gmail.com");
     }
 }

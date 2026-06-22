@@ -10,6 +10,8 @@ import com.stocks.myportfolio.dto.request.auth.*;
 import com.stocks.myportfolio.dto.response.auth.AuthResponse;
 import com.stocks.myportfolio.dto.response.auth.UserResponse;
 import com.stocks.myportfolio.service.AuthService;
+import com.stocks.myportfolio.service.RsaKeyService;
+import com.stocks.myportfolio.service.impl.AuthServiceImpl;
 
 import jakarta.validation.Valid;
 
@@ -18,9 +20,18 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthServiceImpl authServiceImpl;
+    private final RsaKeyService rsaKeyService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, AuthServiceImpl authServiceImpl, RsaKeyService rsaKeyService) {
         this.authService = authService;
+        this.authServiceImpl = authServiceImpl;
+        this.rsaKeyService = rsaKeyService;
+    }
+
+    @GetMapping("/public-key")
+    public Map<String, String> getPublicKey() {
+        return Map.of("publicKey", rsaKeyService.getPublicKeyPem());
     }
 
     @PostMapping("/register")
@@ -42,8 +53,13 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public Map<String, String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request);
-        return Map.of("message", "If the email exists, an OTP has been sent");
+        return authServiceImpl.getSecurityQuestions(request.email());
+    }
+
+    @PostMapping("/verify-security")
+    public Map<String, String> verifySecurity(@RequestBody Map<String, String> body) {
+        authServiceImpl.verifySecurityAnswers(body.get("email"), body.get("answer1"), body.get("answer2"));
+        return Map.of("message", "Security answers verified. OTP sent to your email.");
     }
 
     @PostMapping("/reset-password")

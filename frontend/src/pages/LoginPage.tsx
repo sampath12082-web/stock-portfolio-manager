@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
+import { encryptField } from '@/auth/crypto';
 import type { AuthResponse } from '@/auth/types';
 import axios from 'axios';
 
@@ -17,7 +18,8 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const resp = await axios.post<AuthResponse>('/api/auth/login', { email, password });
+      const encryptedPassword = await encryptField(password);
+      const resp = await axios.post<AuthResponse>('/api/auth/login', { email, password: encryptedPassword });
       login(resp.data.accessToken, resp.data.refreshToken, resp.data.user);
       navigate('/');
     } catch (err: unknown) {
