@@ -44,11 +44,10 @@ logging:
     com.stocks.myportfolio: INFO
     org.flywaydb: INFO
 
-app:
-  jwt:
-    secret: ${JWT_SECRET}
-    access-token-expiry: 900000
-    refresh-token-expiry: 604800000
+jwt:
+  secret: ${JWT_SECRET:bXlwb3J0Zm9saW8tc2VjcmV0LWtleS1mb3Itand0LXRva2VuLWdlbmVyYXRpb24tMjAyNg==}
+  expiration: 900000
+  refresh-expiration: 604800000
 
   rsa:
     private-key: ${RSA_PRIVATE_KEY}

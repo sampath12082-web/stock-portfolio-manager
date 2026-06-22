@@ -40,7 +40,7 @@ jwt:
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
 admin:
-  default-password: ${ADMIN_DEFAULT_PASSWORD:Admin@123}
+  default-password: ${ADMIN_DEFAULT_PASSWORD:Admin@1234567890*}
 
 groww:
   api:
