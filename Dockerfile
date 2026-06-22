@@ -23,11 +23,11 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app
 # Copy using find to handle any JAR name
-COPY --from=backend-build /app/backend/target/*.jar ./
-RUN find /app -name "*.jar" -exec mv {} /app/app.jar \; && chown app:app /app/app.jar
+COPY --from=backend-build /app/backend/target/*.war ./
+RUN find /app -name "*.war" -exec mv {} /app/app.war \; && chown app:app /app/app.war
 USER app
 EXPOSE 8081
 ENTRYPOINT ["java","-Xmx400m","-Xms200m",\
   "-XX:+UseContainerSupport",\
   "-Dspring.profiles.active=prod",\
-  "-jar","/app/app.jar"]
+  "-jar","/app/app.war"]
