@@ -1,6 +1,6 @@
 ---
-name: code-review
-description: Technical code review. Use when asked to review code, check code quality, find bugs, review a PR, audit security, or inspect implementation.
+name: project-review
+description: Project-specific technical review. Use when asked to do a project review, check project quality, audit project security, or inspect the full codebase.
 ---
 
 # Technical Code Review
