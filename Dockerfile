@@ -14,9 +14,9 @@ COPY backend/mvnw backend/pom.xml ./
 COPY backend/.mvn .mvn
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
 COPY --from=frontend-build /app/backend/src ./src
-RUN ./mvnw clean package -DskipTests -q
+RUN ./mvnw clean package -DskipTests
 # Show what was built so we can confirm the JAR name in logs
-RUN ls -lh target/*.jar
+RUN ls -lh target/
 
 # Stage 3: Run
 FROM eclipse-temurin:21-jre-alpine
