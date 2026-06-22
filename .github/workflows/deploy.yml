@@ -1,0 +1,29 @@
+name: Deploy — SoloSprint Trade
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build & Deploy to Render
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify backend compiles
+        working-directory: backend
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests -q
+
+      - name: Verify frontend builds
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Trigger Render deploy
+        run: |
+          curl -s --fail -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo "Deploy triggered successfully"
