@@ -21,11 +21,11 @@ cd frontend && npm run dev
 # Frontend — production build (outputs to backend/src/main/resources/static/)
 cd frontend && npm run build
 
-# E2E tests (requires backend running on port 8081)
+# E2E tests — 116 tests (requires backend running on port 8081)
 cd e2e && npm test                    # All tests
-cd e2e && npm run test:smoke          # Smoke tests only
-cd e2e && npm run test:functional     # Functional tests
-cd e2e && npm run test:regression     # Regression tests
+cd e2e && npm run test:smoke          # Smoke tests (10)
+cd e2e && npm run test:functional     # Functional tests (56)
+cd e2e && npm run test:regression     # Regression tests (13)
 cd e2e && npm run test:headed         # Run with browser visible
 
 # Database setup script (drops and recreates myportfolio DB)
@@ -44,6 +44,7 @@ The backend runs on **port 8081**. The frontend dev server runs on **port 3000**
 | `GROWW_API_ENABLED` | No | `false` | Enable Groww portfolio sync |
 | `GROWW_ACCESS_TOKEN` | If Groww enabled | — | Groww API key (JWT) |
 | `GROWW_API_SECRET` | If Groww enabled | — | Groww API secret for checksum auth |
+| `ANTHROPIC_API_KEY` | No | — | Claude API key for AI Stock Assistant (optional) |
 
 ## Project Structure
 
@@ -91,6 +92,8 @@ Spring Boot 3.5 / Java 21 WAR backend + React 19 / Vite / Tailwind CSS frontend 
 | Signals | `TradingSignal` | `/api/signals` | SMA/RSI/52-week auto-generated signals |
 | Groww Sync | — | `/api/groww` | Portfolio sync, order sync, account details |
 | Mutual Funds | `MutualFund` | `/api/mf/*` | AMFI NAV, holdings, transactions |
+| AI Search | — | `/api/ai` | Dynamic chat, stock analysis, portfolio insights |
+| Help/FAQ | `Faq`, `SupportTicket` | `/api/help/*` | FAQ CRUD, support tickets |
 
 ### P&L Formulas
 
@@ -107,18 +110,19 @@ Spring Boot 3.5 / Java 21 WAR backend + React 19 / Vite / Tailwind CSS frontend 
 
 ### Frontend Architecture
 
-React 19 + Vite + Tailwind CSS (light theme) in `frontend/`.
+React 19 + Vite + Tailwind CSS in `frontend/`. **SoloSprint Trade** branding: Plus Jakarta Sans + JetBrains Mono fonts, Sprint Orange (#D85A30) palette, cream background (#FAFAF8).
 
 - **Build output**: `backend/src/main/resources/static/` (WAR serves both API and UI)
 - **State**: TanStack Query for server state (caching, mutations, invalidation)
 - **Charts**: Recharts. **Routing**: React Router v6 with SPA forwarding.
-- **UI features**: Sortable columns (SortHeader component), sticky table headers, signal filter chips, color-coded P&L rows
+- **UI features**: Sortable columns (SortHeader component), sticky table headers, signal filter chips, color-coded P&L rows, total row footers
+- **Pages**: 15 routes (Dashboard, Holdings, Transactions, Stocks, MF, Performance, AI Search, Help, Profile, Login, Register, Forgot Password, Admin Users, Admin Tickets)
 
 ## Documentation
 
 - **`docs/architecture.md`** — System architecture and project structure
 - **`docs/api-reference.md`** — Complete API endpoint reference
-- **`docs/features.md`** — Feature documentation for all 6 pages
+- **`docs/features.md`** — Feature documentation for all 15 pages
 
 ## Session Continuity
 

@@ -15,9 +15,24 @@
 - All `/api/*` endpoints protected (except `/api/auth/*`)
 - Admin endpoints at `/api/admin/*` restricted to ROLE_ADMIN
 
+### Password Policy
+- Length: 16–20 characters
+- Must contain: uppercase, lowercase, digit, special character
+- Validated on register, reset, and change password
+
+### Security Questions
+- 2 questions selected during registration (8 options)
+- Answers BCrypt-hashed — used in forgot password step 2
+- 3-step forgot flow: email → verify security answers → OTP + new password
+
+### RSA Encryption
+- Frontend encrypts passwords using RSA-OAEP SHA-256 before sending
+- Backend decrypts with private key — passwords never transit in plaintext
+- Public key served via `/api/auth/public-key`
+
 ### Admin User
-- Seeded on first startup: `sampath12082@gmail.com` (ROLE_ADMIN)
-- Default password: `Admin@123` (configurable via `ADMIN_DEFAULT_PASSWORD` env var)
+- Seeded on every startup: `sampath12082@gmail.com` (ROLE_ADMIN)
+- Default password: `Admin@1234567890*` (18 chars, meets policy)
 - All existing portfolio data assigned to admin user
 
 ### Profile Management
@@ -47,6 +62,7 @@
 - **Sortable table**: Stock, Qty, Avg Price, LTP, Target, Invested, Current Value, Realized P&L, Unrealized P&L, Signal
 - **Color coding**: Green row for gain, red for loss, blue left border for active holdings
 - **Sticky header**: Stays visible while scrolling
+- **Total row**: Footer sums qty, invested, current value, realized P&L, unrealized P&L
 - **Groww sync**: Button to sync holdings from broker
 - **Add/Edit modals**: CRUD operations
 
@@ -70,45 +86,81 @@
 - **Add Stock modal**: Smart search with AMFI/Yahoo lookup
 - **Web results**: Yahoo Finance results shown below for non-DB stocks
 
-### 5. Mutual Funds (`/mutual-funds`)
-- **Holdings table**: Scheme name, fund house, units, avg NAV, invested, current NAV, current value, P&L
+### 5. AI Stock Assistant (`/ai-search`)
+- **Chat interface**: Full-height with message bubbles (user = orange, assistant = white)
+- **Dynamic prompts**: Accepts any question — stock analysis, portfolio review, signals, market trends
+- **Stock detection**: Auto-detects stock symbols in prompt, fetches live quote + signal
+- **Stock data card**: Embedded in responses with LTP, day change, signal badge, exchange
+- **Suggestion chips**: 8 quick-start prompts for new users
+- **Sources**: Local analysis from signals data, or Claude API when `ANTHROPIC_API_KEY` set
+- **Typing indicator**: Animated dots during response generation
+- **Recent history**: Session-based search history with quick-select
+
+### 6. Help & Support (`/help`)
+- **FAQ accordion**: Grouped by category (General, Account, Trading, Data, Technical)
+- **12 seeded FAQs**: Pre-populated via V19 migration
+- **Support tickets**: Submit with subject + message
+- **My tickets**: List of user's own tickets with admin responses
+- **Ticket status**: Open, Responded, Closed
+
+### 7. Mutual Funds (`/mutual-funds`)
+- **Holdings table**: Scheme name, fund house, units, avg NAV, invested, current NAV, current value, P&L, P&L%
+- **Total row**: Footer sums units, invested, current value, P&L, P&L%
+- **Color coding**: Green row (current NAV > avg NAV), red text (current NAV < avg NAV)
 - **Transactions table**: Scheme, type (PURCHASE/REDEMPTION), units, NAV, amount, date
 - **AMFI search**: Search and add funds from AMFI catalog
 - **NAV refresh**: Bulk refresh from AMFI feed
 - **Add fund/holding/transaction modals**
 
-### 6. Performance (`/performance`)
+### 8. Performance (`/performance`)
 - **Snapshot summary**: Investment, Current Value, Total P&L, Top Gainer/Loser
 - **Time range buttons**: 7D (default), 30D, 90D, 1Y
 - **Portfolio Value chart**: Area chart with investment line overlay
 - **Snapshot history table**: Date, Investment, Value, P&L, P&L%, Gainer, Loser
 - **Manual capture**: Button to create snapshot on demand
 
-### 7. Login (`/login`)
+### 9. Login (`/login`)
 - Email + password form
 - Error messages for invalid credentials, unverified email, inactive account
 - Links to Register and Forgot Password
 - Redirects to Dashboard on success
 
-### 8. Register (`/register`)
-- Step 1: Email, first name, last name, password
+### 10. Register (`/register`)
+- Step 1: Email, first name, last name, password (16-20 chars), 2 security questions
 - Step 2: OTP verification (6-digit code sent to email)
 - Redirects to Login after verification
 
-### 9. Forgot Password (`/forgot-password`)
-- Step 1: Enter email → sends OTP
-- Step 2: Enter OTP + new password → resets
+### 11. Forgot Password (`/forgot-password`)
+- Step 1: Enter email → returns security questions
+- Step 2: Answer security questions → sends OTP
+- Step 3: Enter OTP + new password (16-20 chars) → resets
 - Redirects to Login on success
 
-### 10. Profile (`/profile`)
+### 12. Profile (`/profile`)
 - **Personal Details**: email (read-only), first name, last name, phone, role display
-- **Change Password**: current password + new password form
+- **Change Password**: current password + new password (16-20 chars) form
+- **Groww Config**: Access token, API secret, enable/disable (admin or per-user)
 - Save button updates profile via API
 
-### 11. Header (all pages)
+### 13. Admin — User Management (`/admin/users`)
+- Table: email, name, role, status, actions
+- Actions: activate, deactivate, reset password, delete
+- Reset returns temporary password
+- Cannot delete admin user
+- Visible only to ROLE_ADMIN (sidebar conditional)
+
+### 14. Admin — Support Tickets (`/admin/tickets`)
+- List all user tickets with subject, status, date
+- Expand to view message
+- Respond to tickets with admin reply
+- Close/reopen tickets
+
+### 15. Header (all pages)
+- SoloSprint Trade brand in sidebar
 - User's first name with profile link
 - Refresh Quotes button
-- Red Logout button (clears JWT, redirects to /login)
+- Orange Logout button (clears JWT, redirects to /login)
+- Version badge (v0.1.0-beta) in sidebar footer
 
 ## P&L Formulas
 

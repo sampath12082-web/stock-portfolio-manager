@@ -137,6 +137,29 @@ Response: `investedAmount`, `currentValue`, `unrealizedPnL`, `unrealizedPnLPerce
 | GET | `/api/groww/account` | Account details (balance, positions, orders) |
 | GET | `/api/groww/status` | API enabled/disabled status |
 
+## Help & FAQ APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/help/faq` | List all FAQs (grouped by category) |
+| GET | `/api/help/tickets` | List own support tickets |
+| POST | `/api/help/tickets` | Submit support ticket (subject + message) |
+| POST | `/api/admin/faq` | Create FAQ entry (admin only) |
+| PUT | `/api/admin/faq/{id}` | Update FAQ entry (admin only) |
+| DELETE | `/api/admin/faq/{id}` | Delete FAQ entry (admin only) |
+| GET | `/api/admin/tickets` | List all support tickets (admin only) |
+| PUT | `/api/admin/tickets/{id}` | Respond to ticket (admin only) |
+
+## AI Search APIs
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/ai/chat` | Dynamic prompt — stock analysis, portfolio review, signals, market questions |
+| GET | `/api/ai/search?query=` | Quick stock search (legacy, redirects to chat) |
+
+Request body for chat: `{ "prompt": "analyze TCS" }`
+Response: `{ "response": "...", "stockData": { symbol, ltp, signalType, ... }, "source": "local|claude" }`
+
 ## Mutual Fund APIs
 
 | Method | Endpoint | Description |
