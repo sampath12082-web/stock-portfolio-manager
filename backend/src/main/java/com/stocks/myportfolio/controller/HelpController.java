@@ -2,20 +2,16 @@ package com.stocks.myportfolio.controller;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.stocks.myportfolio.common.exception.ResourceNotFoundException;
-import com.stocks.myportfolio.entity.Faq;
-import com.stocks.myportfolio.entity.SupportTicket;
-import com.stocks.myportfolio.entity.User;
-import com.stocks.myportfolio.repository.FaqRepository;
-import com.stocks.myportfolio.repository.SupportTicketRepository;
-import com.stocks.myportfolio.repository.UserRepository;
+import com.stocks.myportfolio.entity.*;
+import com.stocks.myportfolio.repository.*;
+import com.stocks.myportfolio.service.AiTicketAgentService;
 
 @RestController
 public class HelpController {
@@ -23,12 +19,17 @@ public class HelpController {
     private final FaqRepository faqRepository;
     private final SupportTicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final TicketActivityRepository activityRepository;
+    private final AiTicketAgentService aiAgent;
 
     public HelpController(FaqRepository faqRepository, SupportTicketRepository ticketRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository, TicketActivityRepository activityRepository,
+            AiTicketAgentService aiAgent) {
         this.faqRepository = faqRepository;
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
+        this.activityRepository = activityRepository;
+        this.aiAgent = aiAgent;
     }
 
     @GetMapping("/api/help/faq")
@@ -49,7 +50,9 @@ public class HelpController {
         ticket.setStatus("OPEN");
 
         SupportTicket saved = ticketRepository.save(ticket);
-        return Map.of("id", saved.getId(), "message", "Ticket submitted successfully");
+        aiAgent.processNewTicket(saved.getId());
+
+        return Map.of("id", saved.getId(), "message", "Ticket submitted — AI agent is reviewing your request");
     }
 
     @GetMapping("/api/help/tickets")
@@ -58,6 +61,20 @@ public class HelpController {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return ticketRepository.findByUserOrderByCreatedAtDesc(user).stream()
                 .map(this::toTicketMap).toList();
+    }
+
+    @GetMapping("/api/help/tickets/{id}/activity")
+    public List<Map<String, Object>> getTicketActivity(@PathVariable Long id) {
+        return activityRepository.findByTicketIdOrderByCreatedAtAsc(id).stream()
+                .map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", a.getId());
+                    m.put("actor", a.getActor());
+                    m.put("action", a.getAction());
+                    m.put("detail", a.getDetail());
+                    m.put("createdAt", a.getCreatedAt().toString());
+                    return m;
+                }).toList();
     }
 
     @GetMapping("/api/admin/tickets")
@@ -79,7 +96,9 @@ public class HelpController {
         if (body.containsKey("status")) {
             ticket.setStatus(body.get("status"));
         }
+        ticket.setUpdatedAt(LocalDateTime.now());
         ticketRepository.save(ticket);
+        activityRepository.save(new TicketActivity(ticket, "ADMIN", "RESPONDED", body.getOrDefault("adminResponse", "")));
         return toTicketMap(ticket);
     }
 
@@ -116,14 +135,31 @@ public class HelpController {
     }
 
     private Map<String, Object> toTicketMap(SupportTicket t) {
-        return Map.of(
-                "id", t.getId(),
-                "userEmail", t.getUser().getEmail(),
-                "userName", t.getUser().getFirstName() + " " + (t.getUser().getLastName() != null ? t.getUser().getLastName() : ""),
-                "subject", t.getSubject(),
-                "message", t.getMessage(),
-                "status", t.getStatus(),
-                "adminResponse", t.getAdminResponse() != null ? t.getAdminResponse() : "",
-                "createdAt", t.getCreatedAt().toString());
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", t.getId());
+        map.put("userEmail", t.getUser().getEmail());
+        map.put("userName", t.getUser().getFirstName() + " " + (t.getUser().getLastName() != null ? t.getUser().getLastName() : ""));
+        map.put("subject", t.getSubject());
+        map.put("message", t.getMessage());
+        map.put("status", t.getStatus());
+        map.put("ticketType", t.getTicketType() != null ? t.getTicketType() : "INQUIRY");
+        map.put("priority", t.getPriority() != null ? t.getPriority() : "MEDIUM");
+        map.put("adminResponse", t.getAdminResponse() != null ? t.getAdminResponse() : "");
+        map.put("aiResponse", t.getAiResponse() != null ? t.getAiResponse() : "");
+        map.put("createdAt", t.getCreatedAt().toString());
+        if (t.getBugReport() != null) {
+            BugReport b = t.getBugReport();
+            Map<String, Object> bug = new LinkedHashMap<>();
+            bug.put("id", b.getId());
+            bug.put("title", b.getTitle());
+            bug.put("severity", b.getSeverity());
+            bug.put("status", b.getStatus());
+            bug.put("testPassed", b.getTestPassed());
+            bug.put("testResult", b.getTestResult());
+            bug.put("estimatedFixHours", b.getEstimatedFixHours());
+            bug.put("estimatedFixDescription", b.getEstimatedFixDescription());
+            map.put("bugReport", bug);
+        }
+        return map;
     }
 }

@@ -8,6 +8,8 @@ import PnLText from '@/components/ui/PnLText';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import Card from '@/components/ui/Card';
+import SortHeader, { toggleSort, sortData } from '@/components/ui/SortHeader';
+import type { SortConfig } from '@/components/ui/SortHeader';
 import { formatCurrency, formatPercentage, formatNumber, formatDateTime } from '@/utils/format';
 import type { MfLookupResponse, MfTransactionType } from '@/api/types';
 
@@ -22,6 +24,8 @@ export default function MutualFundsPage() {
   const refreshNav = useRefreshMfNav();
   const [showAddFund, setShowAddFund] = useState(false);
   const [showAddTxn, setShowAddTxn] = useState(false);
+  const [holdingSort, setHoldingSort] = useState<SortConfig | null>(null);
+  const [txnSort, setTxnSort] = useState<SortConfig | null>(null);
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -55,14 +59,21 @@ export default function MutualFundsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="text-gray-500 text-left border-b border-gray-200 bg-gray-50">
-                <th className="py-3 px-3">Fund</th><th className="py-3 px-3">Fund House</th>
-                <th className="py-3 px-3 text-right">Units</th><th className="py-3 px-3 text-right">Avg NAV</th>
-                <th className="py-3 px-3 text-right">Current NAV</th><th className="py-3 px-3 text-right">Invested</th>
-                <th className="py-3 px-3 text-right">Current Value</th><th className="py-3 px-3 text-right">P&L</th>
-                <th className="py-3 px-3 text-right">P&L%</th>
+                <SortHeader label="Fund" sortKey="schemeName" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} />
+                <SortHeader label="Fund House" sortKey="fundHouse" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} />
+                <SortHeader label="Units" sortKey="units" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} align="right" />
+                <SortHeader label="Avg NAV" sortKey="averageNav" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} align="right" />
+                <SortHeader label="Current NAV" sortKey="currentNav" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} align="right" />
+                <SortHeader label="Invested" sortKey="investedAmount" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} align="right" />
+                <SortHeader label="Current Value" sortKey="currentValue" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} align="right" />
+                <SortHeader label="P&L" sortKey="pnl" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} align="right" />
+                <SortHeader label="P&L%" sortKey="pnlPercentage" sort={holdingSort} onSort={(k) => setHoldingSort(toggleSort(holdingSort, k))} align="right" />
               </tr></thead>
               <tbody>
-                {holdings.map((h) => {
+                {sortData(holdings, holdingSort, (h, k) => {
+                  const v = (h as unknown as Record<string, unknown>)[k];
+                  return typeof v === 'string' ? v : (v as number) ?? null;
+                }).map((h) => {
                   const isLoss = h.currentNav != null && h.averageNav != null && h.currentNav < h.averageNav;
                   const isGain = h.currentNav != null && h.averageNav != null && h.currentNav > h.averageNav;
                   const rowClass = isLoss ? 'text-red-600' : isGain ? 'bg-emerald-600 text-white' : '';
@@ -109,11 +120,20 @@ export default function MutualFundsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="text-gray-500 text-left border-b border-gray-200">
-                <th className="pb-2 px-2">Date</th><th className="pb-2 px-2">Fund</th><th className="pb-2 px-2">Type</th>
-                <th className="pb-2 px-2 text-right">Units</th><th className="pb-2 px-2 text-right">NAV</th><th className="pb-2 px-2 text-right">Amount</th>
+                <SortHeader label="Date" sortKey="tradeDate" sort={txnSort} onSort={(k) => setTxnSort(toggleSort(txnSort, k))} />
+                <SortHeader label="Fund" sortKey="schemeName" sort={txnSort} onSort={(k) => setTxnSort(toggleSort(txnSort, k))} />
+                <SortHeader label="Type" sortKey="transactionType" sort={txnSort} onSort={(k) => setTxnSort(toggleSort(txnSort, k))} />
+                <SortHeader label="Units" sortKey="units" sort={txnSort} onSort={(k) => setTxnSort(toggleSort(txnSort, k))} align="right" />
+                <SortHeader label="NAV" sortKey="nav" sort={txnSort} onSort={(k) => setTxnSort(toggleSort(txnSort, k))} align="right" />
+                <SortHeader label="Amount" sortKey="amount" sort={txnSort} onSort={(k) => setTxnSort(toggleSort(txnSort, k))} align="right" />
               </tr></thead>
               <tbody>
-                {transactions.slice(0, 20).map((t) => (
+                {sortData(transactions.slice(0, 20), txnSort, (t, k) => {
+                  if (k === 'tradeDate') return t.tradeDate || t.createdAt || '';
+                  if (k === 'schemeName') return t.schemeName || t.schemeCode || '';
+                  const v = (t as unknown as Record<string, unknown>)[k];
+                  return typeof v === 'string' ? v : (v as number) ?? null;
+                }).map((t) => (
                   <tr key={t.id} className="border-b border-gray-100">
                     <td className="py-2 px-2 text-gray-500 text-xs">{formatDateTime(t.tradeDate || t.createdAt)}</td>
                     <td className="py-2 px-2 text-gray-900 text-xs max-w-48 truncate">{t.schemeName || t.schemeCode}</td>

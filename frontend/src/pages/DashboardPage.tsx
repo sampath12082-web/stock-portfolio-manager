@@ -162,12 +162,12 @@ export default function DashboardPage() {
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-2.5 border-b border-gray-100">Mutual Funds</h3>
           <div className="grid grid-cols-[1fr_1px_1fr] gap-x-4">
             <div className="space-y-1.5">
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Holdings</span><span className="font-semibold text-gray-900">{mf?.length ?? 0} funds</span></div>
               <div className="flex justify-between text-sm"><span className="text-gray-500">Invested</span><span className="font-semibold text-gray-900">{formatCurrency(mfInvested)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(mfCurrent)}</span></div>
             </div>
             <div className="bg-gray-200" />
             <div className="space-y-1.5">
-              <div className="flex justify-between text-sm"><span className="text-gray-500">Current Value</span><span className="font-semibold text-gray-900">{formatCurrency(mfCurrent)}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-gray-500">Holdings</span><span className="font-semibold text-gray-900">{mf?.length ?? 0} funds</span></div>
               <div className="flex justify-between text-sm"><span className="text-gray-500">P&L</span><span className="font-semibold"><PnLText value={mfPnL} format={formatCurrency} /><span className="text-xs ml-1">(<PnLText value={mfPnLPct} format={formatPercentage} />)</span></span></div>
             </div>
           </div>
