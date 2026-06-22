@@ -19,27 +19,29 @@ import com.stocks.myportfolio.entity.TradingSignal;
 import com.stocks.myportfolio.integration.StockQuoteData;
 import com.stocks.myportfolio.repository.HoldingRepository;
 import com.stocks.myportfolio.repository.TradingSignalRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 
 @Service
 public class AiStockService {
 
     private static final Logger log = LoggerFactory.getLogger(AiStockService.class);
 
-    @Value("${anthropic.api-key:}")
-    private String anthropicApiKey;
-
     private final MarketDataService marketDataService;
     private final StockLookupService stockLookupService;
     private final TradingSignalRepository signalRepository;
     private final HoldingRepository holdingRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final CurrentUserProvider currentUser;
+    private final ClaudeApiClient claudeApi;
 
     public AiStockService(MarketDataService marketDataService, StockLookupService stockLookupService,
-            TradingSignalRepository signalRepository, HoldingRepository holdingRepository) {
+            TradingSignalRepository signalRepository, HoldingRepository holdingRepository,
+            CurrentUserProvider currentUser, ClaudeApiClient claudeApi) {
         this.marketDataService = marketDataService;
         this.stockLookupService = stockLookupService;
         this.signalRepository = signalRepository;
         this.holdingRepository = holdingRepository;
+        this.currentUser = currentUser;
+        this.claudeApi = claudeApi;
     }
 
     public Map<String, Object> chat(String prompt) {
@@ -48,7 +50,7 @@ public class AiStockService {
 
         String context = buildContext(prompt);
 
-        if (anthropicApiKey != null && !anthropicApiKey.isBlank()) {
+        if (claudeApi.isAvailable()) {
             try {
                 String response = callClaude(prompt, context);
                 result.put("response", response);
@@ -74,7 +76,7 @@ public class AiStockService {
     private String buildContext(String prompt) {
         StringBuilder ctx = new StringBuilder();
 
-        List<Holding> activeHoldings = holdingRepository.findAll().stream()
+        List<Holding> activeHoldings = holdingRepository.findByUserId(currentUser.getUserId()).stream()
                 .filter(h -> h.getQuantity() > 0).toList();
 
         ctx.append("USER PORTFOLIO: ");
@@ -197,28 +199,7 @@ public class AiStockService {
                 "When mentioning stocks, include their current price and signal if available. " +
                 "Keep responses concise (3-5 sentences). Always include a clear recommendation when relevant. " +
                 "Disclaimer: This is for educational purposes only, not financial advice.";
-
-        String fullPrompt = String.format("Context:\n%s\n\nUser question: %s", context, prompt);
-
-        RestClient client = RestClient.create();
-        String body = objectMapper.writeValueAsString(Map.of(
-                "model", "claude-sonnet-4-6",
-                "max_tokens", 500,
-                "system", systemPrompt,
-                "messages", List.of(Map.of("role", "user", "content", fullPrompt))
-        ));
-
-        String response = client.post()
-                .uri("https://api.anthropic.com/v1/messages")
-                .header("x-api-key", anthropicApiKey)
-                .header("anthropic-version", "2023-06-01")
-                .header("content-type", "application/json")
-                .body(body)
-                .retrieve()
-                .body(String.class);
-
-        JsonNode root = objectMapper.readTree(response);
-        return root.path("content").get(0).path("text").asText();
+        return claudeApi.call(systemPrompt, String.format("Context:\n%s\n\nUser question: %s", context, prompt));
     }
 
     private String generateLocalResponse(String prompt, String context) {
@@ -246,7 +227,7 @@ public class AiStockService {
     }
 
     private String generatePortfolioResponse(String context) {
-        List<Holding> active = holdingRepository.findAll().stream().filter(h -> h.getQuantity() > 0).toList();
+        List<Holding> active = holdingRepository.findByUserId(currentUser.getUserId()).stream().filter(h -> h.getQuantity() > 0).toList();
         if (active.isEmpty()) return "You have no active stock holdings.";
 
         BigDecimal totalInv = active.stream().map(Holding::getInvestedAmount).reduce(BigDecimal.ZERO, BigDecimal::add);

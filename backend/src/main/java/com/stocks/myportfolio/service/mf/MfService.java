@@ -64,8 +64,7 @@ public class MfService {
 
     @Transactional(readOnly = true)
     public List<MfFundResponse> getAllFunds() {
-        Long uid = currentUser.getUserId();
-        return (uid != null ? fundRepository.findByUserId(uid) : fundRepository.findAll())
+        return fundRepository.findByUserId(currentUser.getUserId())
                 .stream().map(this::toFundResponse).toList();
     }
 
@@ -98,8 +97,7 @@ public class MfService {
 
     @Transactional(readOnly = true)
     public List<MfHoldingResponse> getAllHoldings() {
-        Long uid = currentUser.getUserId();
-        return (uid != null ? holdingRepository.findByUserId(uid) : holdingRepository.findAll())
+        return holdingRepository.findByUserId(currentUser.getUserId())
                 .stream().filter(h -> h.getUnits().compareTo(BigDecimal.ZERO) > 0)
                 .map(this::toHoldingResponse).toList();
     }

@@ -43,6 +43,13 @@ public class HelpController {
         User user = userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        long recentCount = ticketRepository.findByUserOrderByCreatedAtDesc(user).stream()
+                .filter(t -> t.getCreatedAt().isAfter(java.time.LocalDateTime.now().minusMinutes(5)))
+                .count();
+        if (recentCount >= 3) {
+            return Map.of("id", 0, "message", "Rate limited — max 3 tickets per 5 minutes. Please wait.");
+        }
+
         SupportTicket ticket = new SupportTicket();
         ticket.setUser(user);
         ticket.setSubject(body.get("subject"));

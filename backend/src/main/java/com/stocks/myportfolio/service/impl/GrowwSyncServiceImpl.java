@@ -29,6 +29,7 @@ import com.stocks.myportfolio.integration.groww.GrowwPortfolioResponse;
 import com.stocks.myportfolio.repository.HoldingRepository;
 import com.stocks.myportfolio.repository.StockRepository;
 import com.stocks.myportfolio.repository.TransactionRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.GrowwSyncService;
 import com.stocks.myportfolio.service.StockLookupService;
 
@@ -43,19 +44,22 @@ public class GrowwSyncServiceImpl implements GrowwSyncService {
     private final HoldingRepository holdingRepository;
     private final TransactionRepository transactionRepository;
     private final StockLookupService stockLookupService;
+    private final CurrentUserProvider currentUser;
 
     public GrowwSyncServiceImpl(
             GrowwClient growwClient,
             StockRepository stockRepository,
             HoldingRepository holdingRepository,
             TransactionRepository transactionRepository,
-            StockLookupService stockLookupService) {
+            StockLookupService stockLookupService,
+            CurrentUserProvider currentUser) {
 
         this.growwClient = growwClient;
         this.stockRepository = stockRepository;
         this.holdingRepository = holdingRepository;
         this.transactionRepository = transactionRepository;
         this.stockLookupService = stockLookupService;
+        this.currentUser = currentUser;
     }
 
     @Override
@@ -112,7 +116,7 @@ public class GrowwSyncServiceImpl implements GrowwSyncService {
         }
 
         // Zero out holdings not present in Groww (sold stocks)
-        List<Holding> allHoldings = holdingRepository.findAll();
+        List<Holding> allHoldings = holdingRepository.findByUserId(currentUser.getUserId());
         for (Holding h : allHoldings) {
             if (h.getQuantity() > 0 && !growwStockIds.contains(h.getStock().getId())) {
                 log.info("Zeroing out stale holding: {} (qty was {})",

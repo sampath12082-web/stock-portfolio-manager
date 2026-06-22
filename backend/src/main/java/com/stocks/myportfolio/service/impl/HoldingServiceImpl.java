@@ -93,8 +93,7 @@ public class HoldingServiceImpl implements HoldingService {
 
     @Override
     public List<HoldingResponse> getAllHoldings() {
-        Long uid = currentUser.getUserId();
-        List<Holding> holdings = uid != null ? holdingRepository.findByUserId(uid) : holdingRepository.findAll();
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
         Map<String, StockQuoteData> prices;
 
         try {

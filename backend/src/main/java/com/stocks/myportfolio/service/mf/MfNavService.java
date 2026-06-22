@@ -33,7 +33,7 @@ public class MfNavService {
     @Scheduled(cron = "0 0 21 * * MON-FRI")
     public void refreshNavs() {
         log.info("Refreshing mutual fund NAVs from AMFI");
-        List<MutualFund> trackedFunds = mutualFundRepository.findAll();
+        List<MutualFund> trackedFunds = mutualFundRepository.findByUserIdIsNotNull();
         if (trackedFunds.isEmpty()) return;
 
         java.util.Map<String, MutualFund> schemeMap = new java.util.HashMap<>();

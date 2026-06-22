@@ -23,8 +23,11 @@ import com.stocks.myportfolio.entity.TradingSignal;
 import com.stocks.myportfolio.integration.yahoo.HistoricalQuote;
 import com.stocks.myportfolio.integration.yahoo.YahooFinanceProvider;
 import com.stocks.myportfolio.repository.HoldingRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.StockRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.TradingSignalRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.TechnicalAnalysisService;
 
 @Service
@@ -44,23 +47,26 @@ public class TechnicalAnalysisServiceImpl implements TechnicalAnalysisService {
     private final HoldingRepository holdingRepository;
     private final StockRepository stockRepository;
     private final TradingSignalRepository signalRepository;
+    private final CurrentUserProvider currentUser;
 
     public TechnicalAnalysisServiceImpl(
             YahooFinanceProvider yahooProvider,
             HoldingRepository holdingRepository,
             StockRepository stockRepository,
-            TradingSignalRepository signalRepository) {
+            TradingSignalRepository signalRepository,
+            CurrentUserProvider currentUser) {
 
         this.yahooProvider = yahooProvider;
         this.holdingRepository = holdingRepository;
         this.stockRepository = stockRepository;
         this.signalRepository = signalRepository;
+        this.currentUser = currentUser;
     }
 
     @Override
     @Transactional
     public List<TradingSignalResponse> analyzeHoldings() {
-        List<Holding> holdings = holdingRepository.findAll();
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
         List<TradingSignalResponse> results = new ArrayList<>();
 
         for (Holding holding : holdings) {
@@ -89,7 +95,7 @@ public class TechnicalAnalysisServiceImpl implements TechnicalAnalysisService {
         List<TradingSignalResponse> results = new ArrayList<>();
 
         // PRIORITY 1: Analyze portfolio stocks (BUY/SELL/HOLD)
-        List<Holding> holdings = holdingRepository.findAll();
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
         java.util.Set<String> portfolioSymbols = new java.util.HashSet<>();
         for (Holding holding : holdings) {
             if (holding.getQuantity() <= 0) continue;

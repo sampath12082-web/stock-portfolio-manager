@@ -17,4 +17,6 @@ public interface MutualFundRepository extends JpaRepository<MutualFund, Long> {
 
     List<MutualFund> findByFundHouseIgnoreCase(String fundHouse);
     List<MutualFund> findByUserId(Long userId);
+
+    List<MutualFund> findByUserIdIsNotNull();
 }

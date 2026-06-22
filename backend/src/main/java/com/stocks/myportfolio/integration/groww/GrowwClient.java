@@ -245,7 +245,7 @@ public class GrowwClient {
             return sessionToken;
         }
 
-        log.info("Obtaining Groww API session token");
+        log.debug("Obtaining Groww API session");
         try {
             long timestamp = System.currentTimeMillis() / 1000;
             String checksum = generateChecksum(
@@ -274,7 +274,7 @@ public class GrowwClient {
 
             sessionToken = response.path("token").asText();
             sessionExpiresAt = timestamp + 86400;
-            log.info("Groww session token obtained successfully");
+            log.debug("Groww session established");
             return sessionToken;
 
         } catch (Exception e) {

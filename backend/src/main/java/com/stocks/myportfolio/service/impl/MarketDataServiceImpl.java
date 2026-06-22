@@ -16,8 +16,11 @@ import com.stocks.myportfolio.entity.StockQuote;
 import com.stocks.myportfolio.integration.MarketDataProvider;
 import com.stocks.myportfolio.integration.StockQuoteData;
 import com.stocks.myportfolio.repository.HoldingRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.StockQuoteRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.repository.StockRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
 import com.stocks.myportfolio.service.MarketDataService;
 
 @Service
@@ -29,17 +32,20 @@ public class MarketDataServiceImpl implements MarketDataService {
     private final StockQuoteRepository stockQuoteRepository;
     private final StockRepository stockRepository;
     private final HoldingRepository holdingRepository;
+    private final CurrentUserProvider currentUser;
 
     public MarketDataServiceImpl(
             MarketDataProvider marketDataProvider,
             StockQuoteRepository stockQuoteRepository,
             StockRepository stockRepository,
-            HoldingRepository holdingRepository) {
+            HoldingRepository holdingRepository,
+            CurrentUserProvider currentUser) {
 
         this.marketDataProvider = marketDataProvider;
         this.stockQuoteRepository = stockQuoteRepository;
         this.stockRepository = stockRepository;
         this.holdingRepository = holdingRepository;
+        this.currentUser = currentUser;
     }
 
     @Override
@@ -63,7 +69,7 @@ public class MarketDataServiceImpl implements MarketDataService {
 
     @Override
     public Map<String, StockQuoteData> getCurrentPrices() {
-        List<Holding> holdings = holdingRepository.findAll();
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
         Map<String, StockQuoteData> result = new HashMap<>();
 
         for (Holding holding : holdings) {
@@ -111,7 +117,7 @@ public class MarketDataServiceImpl implements MarketDataService {
 
     @Override
     public void refreshAllQuotes() {
-        List<Holding> holdings = holdingRepository.findAll();
+        List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
 
         Map<com.stocks.myportfolio.common.enums.Exchange, List<Holding>> byExchange =
                 holdings.stream()

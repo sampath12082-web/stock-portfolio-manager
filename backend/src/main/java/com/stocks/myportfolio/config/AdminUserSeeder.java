@@ -34,7 +34,7 @@ public class AdminUserSeeder implements ApplicationRunner {
             admin.setPasswordHash(passwordEncoder.encode(adminDefaultPassword));
             admin.setEmailVerified(true);
             userRepository.save(admin);
-            log.info("Admin user password reset to default");
+            log.debug("Admin user credentials refreshed");
             return;
         }
 

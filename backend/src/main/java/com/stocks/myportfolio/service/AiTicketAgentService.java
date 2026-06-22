@@ -26,21 +26,20 @@ public class AiTicketAgentService {
 
     private static final Logger log = LoggerFactory.getLogger(AiTicketAgentService.class);
 
-    @Value("${anthropic.api-key:}")
-    private String anthropicApiKey;
-
     private final SupportTicketRepository ticketRepo;
     private final BugReportRepository bugRepo;
     private final TicketActivityRepository activityRepo;
     private final PlaywrightTestRunnerService testRunner;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ClaudeApiClient claudeApi;
 
     public AiTicketAgentService(SupportTicketRepository ticketRepo, BugReportRepository bugRepo,
-            TicketActivityRepository activityRepo, PlaywrightTestRunnerService testRunner) {
+            TicketActivityRepository activityRepo, PlaywrightTestRunnerService testRunner,
+            ClaudeApiClient claudeApi) {
         this.ticketRepo = ticketRepo;
         this.bugRepo = bugRepo;
         this.activityRepo = activityRepo;
         this.testRunner = testRunner;
+        this.claudeApi = claudeApi;
     }
 
     @Async("ticketAgentExecutor")
@@ -71,7 +70,7 @@ public class AiTicketAgentService {
     }
 
     private String classifyTicket(String subject, String message) {
-        if (anthropicApiKey != null && !anthropicApiKey.isBlank()) {
+        if (claudeApi.isAvailable()) {
             try {
                 String prompt = String.format(
                         "Classify this support ticket for a stock portfolio management app.\n\n" +
@@ -191,7 +190,7 @@ public class AiTicketAgentService {
     }
 
     private String generateInquiryResponse(String subject, String message) {
-        if (anthropicApiKey != null && !anthropicApiKey.isBlank()) {
+        if (claudeApi.isAvailable()) {
             try {
                 String systemPrompt = "You are a helpful support agent for SoloSprint Trade, an Indian stock portfolio management app " +
                         "(NSE/BSE). Features include: Dashboard (P&L, Groww account, mutual funds), Holdings, Transactions, Stocks, " +
@@ -223,7 +222,7 @@ public class AiTicketAgentService {
     }
 
     public String estimateFixEffort(BugReport bug) {
-        if (anthropicApiKey != null && !anthropicApiKey.isBlank()) {
+        if (claudeApi.isAvailable()) {
             try {
                 String prompt = String.format(
                         "Bug: %s\nDescription: %s\nTest results: %s\nSeverity: %s\n\n" +
@@ -244,7 +243,7 @@ public class AiTicketAgentService {
     }
 
     public String generateStatusUpdate(SupportTicket ticket, String statusChange) {
-        if (anthropicApiKey != null && !anthropicApiKey.isBlank()) {
+        if (claudeApi.isAvailable()) {
             try {
                 String prompt = String.format("Ticket: %s\nStatus changed to: %s\nGenerate a brief user-friendly status update (1-2 sentences).",
                         ticket.getSubject(), statusChange);
@@ -282,25 +281,7 @@ public class AiTicketAgentService {
     }
 
     private String callClaude(String systemPrompt, String userMessage) throws Exception {
-        RestClient client = RestClient.create();
-        String body = objectMapper.writeValueAsString(Map.of(
-                "model", "claude-sonnet-4-6",
-                "max_tokens", 500,
-                "system", systemPrompt,
-                "messages", List.of(Map.of("role", "user", "content", userMessage))
-        ));
-
-        String response = client.post()
-                .uri("https://api.anthropic.com/v1/messages")
-                .header("x-api-key", anthropicApiKey)
-                .header("anthropic-version", "2023-06-01")
-                .header("content-type", "application/json")
-                .body(body)
-                .retrieve()
-                .body(String.class);
-
-        JsonNode root = objectMapper.readTree(response);
-        return root.path("content").get(0).path("text").asText();
+        return claudeApi.call(systemPrompt, userMessage);
     }
 
     private void logActivity(SupportTicket ticket, String actor, String action, String detail) {
