@@ -39,9 +39,6 @@ jwt:
   expiration: ${JWT_EXPIRATION:900000}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
-admin:
-  default-password: ${ADMIN_DEFAULT_PASSWORD:Admin@1234567890*}
-
 groww:
   api:
     base-url: https://api.groww.in

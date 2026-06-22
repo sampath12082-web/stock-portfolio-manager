@@ -51,10 +51,6 @@ jwt:
   expiration: 900000
   refresh-expiration: 604800000
 
-admin:
-  email: ${ADMIN_EMAIL:sampath12082@gmail.com}
-  default-password: ${ADMIN_DEFAULT_PASSWORD:Admin@1234567890*}
-
 groww:
   api:
     base-url: https://api.groww.in
