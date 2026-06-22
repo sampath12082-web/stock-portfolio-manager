@@ -153,8 +153,66 @@ test.describe('UI Rendering — Page Navigation', () => {
     await expect(page.getByText('Personal Details')).toBeVisible({ timeout: 10000 });
   });
 
+  test('performance page renders chart and snapshot', async ({ page }) => {
+    await page.click('nav >> text=Performance');
+    await expect(page.locator('h1')).toContainText('Performance');
+    await expect(page.getByText('Investment', { exact: true }).first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Total P&L')).toBeVisible();
+  });
+
+  test('admin tickets page renders', async ({ page }) => {
+    await page.click('nav >> text=Support Tickets');
+    await expect(page.locator('h1')).toContainText('Support Tickets');
+  });
+
   test('logout redirects to login', async ({ page }) => {
     await page.click('text=Logout');
     await expect(page).toHaveURL('/login', { timeout: 5000 });
+  });
+});
+
+test.describe('UI Rendering — Auth Pages', () => {
+  test('register page renders form with security questions', async ({ page }) => {
+    await page.goto('/register');
+    await expect(page.getByText('Create your account')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('input[type="email"]')).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
+    await expect(page.locator('select').first()).toBeVisible();
+  });
+
+  test('register validates required fields on submit', async ({ page }) => {
+    await page.goto('/register');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/register/);
+  });
+
+  test('forgot password page renders email step', async ({ page }) => {
+    await page.goto('/forgot-password');
+    await expect(page.getByText('Reset your password')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('input[type="email"]')).toBeVisible();
+    await expect(page.getByText('Back to login')).toBeVisible();
+  });
+
+  test('forgot password links back to login', async ({ page }) => {
+    await page.goto('/forgot-password');
+    await page.click('text=Back to login');
+    await expect(page).toHaveURL('/login', { timeout: 5000 });
+  });
+
+  test('login page renders SoloSprint branding', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.getByText('TRADE')).toBeVisible();
+    await expect(page.getByText('Sign in to your account')).toBeVisible();
+    await expect(page.getByText('Create account')).toBeVisible();
+    await expect(page.getByText('Forgot password?')).toBeVisible();
+  });
+
+  test('login page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.goto('/login');
+    await page.waitForTimeout(2000);
+    expect(errors.length).toBe(0);
   });
 });
