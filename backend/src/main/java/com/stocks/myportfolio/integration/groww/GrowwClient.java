@@ -7,6 +7,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -20,6 +21,10 @@ import org.springframework.web.client.RestClient;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import com.stocks.myportfolio.common.exception.MarketDataException;
+import com.stocks.myportfolio.entity.UserGrowwConfig;
+import com.stocks.myportfolio.repository.UserGrowwConfigRepository;
+import com.stocks.myportfolio.security.CurrentUserProvider;
+import com.stocks.myportfolio.service.RsaKeyService;
 
 @Component
 @ConditionalOnProperty(name = "groww.api.enabled", havingValue = "true")
@@ -28,11 +33,35 @@ public class GrowwClient {
     private static final Logger log = LoggerFactory.getLogger(GrowwClient.class);
 
     private final GrowwProperties properties;
-    private volatile String sessionToken;
-    private volatile long sessionExpiresAt;
+    private final UserGrowwConfigRepository growwConfigRepo;
+    private final CurrentUserProvider currentUser;
+    private final RsaKeyService rsaKeyService;
 
-    public GrowwClient(GrowwProperties properties) {
+    private record SessionEntry(String token, long expiresAt) {}
+    private final ConcurrentHashMap<Long, SessionEntry> userSessions = new ConcurrentHashMap<>();
+
+    public GrowwClient(GrowwProperties properties, UserGrowwConfigRepository growwConfigRepo,
+            CurrentUserProvider currentUser, RsaKeyService rsaKeyService) {
         this.properties = properties;
+        this.growwConfigRepo = growwConfigRepo;
+        this.currentUser = currentUser;
+        this.rsaKeyService = rsaKeyService;
+    }
+
+    private UserGrowwConfig getUserConfig() {
+        Long userId = currentUser.getUserId();
+        if (userId == null) throw new MarketDataException("Not authenticated");
+        return growwConfigRepo.findByUserId(userId)
+                .orElseThrow(() -> new MarketDataException("Groww not configured. Set credentials in Profile → Groww Config."));
+    }
+
+    private String decryptValue(String encrypted) {
+        if (encrypted == null || encrypted.isBlank()) return null;
+        try {
+            return rsaKeyService.decrypt(encrypted);
+        } catch (Exception e) {
+            return encrypted;
+        }
     }
 
     public GrowwStockResponse getQuote(String tradingSymbol, String exchange) {
@@ -59,151 +88,101 @@ public class GrowwClient {
                         .collect(Collectors.joining(","));
 
                 Map<String, GrowwStockResponse> batchResult = buildClient().get()
-                        .uri("/v1/live-data/ohlc?segment=CASH&exchange_symbols={symbols}",
-                                symbols)
+                        .uri("/v1/live-data/ohlc?exchange_symbols=" + symbols)
                         .retrieve()
-                        .body(new ParameterizedTypeReference<>() {});
+                        .body(new ParameterizedTypeReference<>() {
+                        });
 
                 if (batchResult != null) {
                     allResults.putAll(batchResult);
                 }
             }
-
             return allResults;
         } catch (Exception e) {
-            throw new MarketDataException(
-                    "Failed to fetch OHLC data", e);
+            throw new MarketDataException("Failed to fetch OHLC data", e);
         }
     }
 
     public GrowwPortfolioResponse getHoldings() {
         try {
-            JsonNode root = buildClient().get()
-                    .uri("/v1/holdings/user")
+            return buildClient().get()
+                    .uri("/v1/user/portfolio/holdings")
                     .retrieve()
-                    .body(JsonNode.class);
-
-            JsonNode payload = root.path("payload");
-            if (payload.isMissingNode()) {
-                throw new MarketDataException("Groww holdings response missing payload");
-            }
-
-            GrowwPortfolioResponse response = new GrowwPortfolioResponse();
-            java.util.List<GrowwHoldingData> holdings = new java.util.ArrayList<>();
-
-            for (JsonNode node : payload.path("holdings")) {
-                GrowwHoldingData h = new GrowwHoldingData();
-                h.setTradingSymbol(node.path("trading_symbol").asText());
-                h.setQuantity(java.math.BigDecimal.valueOf(node.path("quantity").asDouble()));
-                h.setAveragePrice(java.math.BigDecimal.valueOf(node.path("average_price").asDouble()));
-
-                java.util.List<String> exchanges = new java.util.ArrayList<>();
-                for (JsonNode ex : node.path("tradable_exchanges")) {
-                    exchanges.add(ex.asText());
-                }
-                h.setTradableExchanges(exchanges);
-                holdings.add(h);
-            }
-
-            response.setHoldings(holdings);
-            return response;
-        } catch (MarketDataException e) {
-            throw e;
+                    .body(GrowwPortfolioResponse.class);
         } catch (Exception e) {
-            throw new MarketDataException(
-                    "Failed to fetch holdings from Groww", e);
+            throw new MarketDataException("Failed to fetch holdings from Groww", e);
         }
     }
 
-    public java.util.List<GrowwOrderData> getOrders() {
+    public JsonNode getTodayPositions() {
         try {
-            java.util.List<GrowwOrderData> allOrders = new java.util.ArrayList<>();
-            int page = 0;
+            return buildClient().get()
+                    .uri("/v1/user/positions?type=TODAYS")
+                    .retrieve()
+                    .body(JsonNode.class);
+        } catch (Exception e) {
+            throw new MarketDataException("Failed to fetch positions from Groww", e);
+        }
+    }
 
-            while (true) {
-                JsonNode root = buildClient().get()
-                        .uri("/v1/order/list?page={page}&page_size=50", page)
-                        .retrieve()
-                        .body(JsonNode.class);
-
-                JsonNode payload = root.path("payload");
-                JsonNode orderList = payload.has("order_list")
-                        ? payload.path("order_list")
-                        : root.path("order_list");
-
-                if (orderList.isMissingNode() || orderList.isEmpty()) {
-                    break;
-                }
-
-                for (JsonNode node : orderList) {
-                    if (!"EXECUTED".equals(node.path("order_status").asText())) {
-                        continue;
-                    }
-                    if (!"CASH".equals(node.path("segment").asText())) {
-                        continue;
-                    }
-
-                    GrowwOrderData order = new GrowwOrderData();
-                    order.setGrowwOrderId(node.path("groww_order_id").asText());
-                    order.setTradingSymbol(node.path("trading_symbol").asText());
-                    order.setOrderStatus(node.path("order_status").asText());
-                    order.setQuantity(node.path("quantity").asInt());
-                    order.setFilledQuantity(node.path("filled_quantity").asInt());
-                    order.setAverageFillPrice(java.math.BigDecimal.valueOf(
-                            node.path("average_fill_price").asDouble()));
-                    order.setExchange(node.path("exchange").asText());
-                    order.setTransactionType(node.path("transaction_type").asText());
-                    order.setSegment(node.path("segment").asText());
-                    order.setProduct(node.path("product").asText());
-                    order.setTradeDate(node.path("trade_date").asText());
-                    order.setCreatedAt(node.path("created_at").asText());
-                    allOrders.add(order);
-                }
-
-                if (orderList.size() < 50) {
-                    break;
-                }
-                page++;
-            }
-
-            return allOrders;
+    public JsonNode getTodayOrders() {
+        try {
+            return buildClient().get()
+                    .uri("/v1/user/orders?type=ALL&status=ALL")
+                    .retrieve()
+                    .body(JsonNode.class);
         } catch (Exception e) {
             throw new MarketDataException("Failed to fetch orders from Groww", e);
         }
     }
 
-    public JsonNode getAllOrders() {
+    public JsonNode getAccountDetails() {
         try {
-            JsonNode root = buildClient().get()
-                    .uri("/v1/order/list?page=0&page_size=100")
+            return buildClient().get()
+                    .uri("/v1/user/details")
                     .retrieve()
                     .body(JsonNode.class);
-            JsonNode payload = root.path("payload");
-            return payload.has("order_list") ? payload.path("order_list") : root.path("order_list");
         } catch (Exception e) {
-            throw new MarketDataException("Failed to fetch all orders from Groww", e);
+            throw new MarketDataException("Failed to fetch account details from Groww", e);
+        }
+    }
+
+    public List<GrowwOrderData> getOrders() {
+        try {
+            JsonNode root = buildClient().get()
+                    .uri("/v1/user/orders?type=ALL&status=ALL")
+                    .retrieve()
+                    .body(JsonNode.class);
+            List<GrowwOrderData> orders = new java.util.ArrayList<>();
+            if (root != null && root.isArray()) {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                for (JsonNode node : root) {
+                    orders.add(mapper.treeToValue(node, GrowwOrderData.class));
+                }
+            }
+            return orders;
+        } catch (Exception e) {
+            throw new MarketDataException("Failed to fetch orders from Groww", e);
         }
     }
 
     public JsonNode getMarginDetails() {
         try {
-            JsonNode root = buildClient().get()
-                    .uri("/v1/margins/detail/user")
+            return buildClient().get()
+                    .uri("/v1/user/margin")
                     .retrieve()
                     .body(JsonNode.class);
-            return root.has("payload") ? root.path("payload") : root;
         } catch (Exception e) {
-            throw new MarketDataException("Failed to fetch margin details from Groww", e);
+            throw new MarketDataException("Failed to fetch margin from Groww", e);
         }
     }
 
     public JsonNode getPositions() {
         try {
-            JsonNode root = buildClient().get()
-                    .uri("/v1/positions/user?segment=CASH")
+            return buildClient().get()
+                    .uri("/v1/user/positions?type=TODAYS")
                     .retrieve()
                     .body(JsonNode.class);
-            return root.has("payload") ? root.path("payload") : root;
         } catch (Exception e) {
             throw new MarketDataException("Failed to fetch positions from Groww", e);
         }
@@ -215,8 +194,8 @@ public class GrowwClient {
                     .uri("/v1/user/profile")
                     .retrieve()
                     .body(JsonNode.class);
-            if (root.has("success")) {
-                return root.path("success").path("data");
+            if (root == null) {
+                throw new MarketDataException("Empty response from Groww profile");
             }
             return root.has("payload") ? root.path("payload") : root;
         } catch (Exception e) {
@@ -240,16 +219,26 @@ public class GrowwClient {
     }
 
     private synchronized String getOrRefreshSessionToken() {
+        UserGrowwConfig config = getUserConfig();
+        Long userId = currentUser.getUserId();
+
         long now = System.currentTimeMillis() / 1000;
-        if (sessionToken != null && now < sessionExpiresAt - 300) {
-            return sessionToken;
+        SessionEntry cached = userSessions.get(userId);
+        if (cached != null && now < cached.expiresAt() - 300) {
+            return cached.token();
         }
 
-        log.debug("Obtaining Groww API session");
+        String accessToken = decryptValue(config.getAccessTokenEncrypted());
+        String apiSecret = decryptValue(config.getApiSecretEncrypted());
+
+        if (accessToken == null || apiSecret == null) {
+            throw new MarketDataException("Groww credentials incomplete. Update in Profile → Groww Config.");
+        }
+
+        log.debug("Obtaining Groww API session for user {}", userId);
         try {
             long timestamp = System.currentTimeMillis() / 1000;
-            String checksum = generateChecksum(
-                    properties.getApiSecret(), String.valueOf(timestamp));
+            String checksum = generateChecksum(apiSecret, String.valueOf(timestamp));
 
             Map<String, Object> body = Map.of(
                     "key_type", "approval",
@@ -258,7 +247,7 @@ public class GrowwClient {
 
             RestClient loginClient = RestClient.builder()
                     .baseUrl(properties.getBaseUrl())
-                    .defaultHeader("Authorization", "Bearer " + properties.getAccessToken())
+                    .defaultHeader("Authorization", "Bearer " + accessToken)
                     .defaultHeader("Content-Type", "application/json")
                     .defaultHeader("Accept", "application/json")
                     .defaultHeader("X-API-VERSION", properties.getApiVersion())
@@ -272,25 +261,24 @@ public class GrowwClient {
                     .retrieve()
                     .body(JsonNode.class);
 
-            sessionToken = response.path("token").asText();
-            sessionExpiresAt = timestamp + 86400;
-            log.debug("Groww session established");
+            String sessionToken = response.path("token").asText();
+            userSessions.put(userId, new SessionEntry(sessionToken, timestamp + 86400));
+            log.debug("Groww session established for user {}", userId);
             return sessionToken;
 
         } catch (Exception e) {
-            throw new MarketDataException(
-                    "Failed to obtain Groww session token", e);
+            throw new MarketDataException("Failed to obtain Groww session token", e);
         }
     }
 
-    private static String generateChecksum(String secret, String timestamp) {
+    private String generateChecksum(String apiSecret, String timestamp) {
         try {
-            String input = secret + timestamp;
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String input = apiSecret + "|" + timestamp;
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
         } catch (Exception e) {
-            throw new MarketDataException("Failed to generate checksum", e);
+            throw new MarketDataException("Checksum generation failed", e);
         }
     }
 }

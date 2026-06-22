@@ -8,4 +8,6 @@ import com.stocks.myportfolio.entity.User;
 public interface UserGrowwConfigRepository extends JpaRepository<UserGrowwConfig, Long> {
 
     Optional<UserGrowwConfig> findByUser(User user);
+
+    Optional<UserGrowwConfig> findByUserId(Long userId);
 }

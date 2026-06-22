@@ -274,7 +274,7 @@ public class GrowwSyncServiceImpl implements GrowwSyncService {
 
         // Also add non-executed orders
         try {
-            JsonNode allOrdersNode = growwClient.getAllOrders();
+            JsonNode allOrdersNode = growwClient.getTodayOrders();
             for (JsonNode node : allOrdersNode) {
                 String status = node.path("order_status").asText();
                 if (!"EXECUTED".equals(status)) {
