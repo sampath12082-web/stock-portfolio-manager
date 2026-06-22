@@ -49,19 +49,15 @@ jwt:
   expiration: 900000
   refresh-expiration: 604800000
 
-  rsa:
-    private-key: ${RSA_PRIVATE_KEY}
-    public-key: ${RSA_PUBLIC_KEY}
+admin:
+  default-password: ${ADMIN_DEFAULT_PASSWORD:Admin@1234567890*}
 
-  admin:
-    email: ${ADMIN_EMAIL}
-    password: ${ADMIN_PASSWORD}
-
-  groww:
+groww:
+  api:
     enabled: ${GROWW_API_ENABLED:false}
 
-  anthropic:
-    api-key: ${ANTHROPIC_API_KEY:}
+anthropic:
+  api-key: ${ANTHROPIC_API_KEY:}
 
-  cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://solosprint-trade.onrender.com}
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://stock-portfolio-manager-4rht.onrender.com}
