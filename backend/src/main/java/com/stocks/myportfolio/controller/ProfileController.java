@@ -1,14 +1,17 @@
 package com.stocks.myportfolio.controller;
 
 import java.security.Principal;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.stocks.myportfolio.common.exception.ResourceNotFoundException;
 import com.stocks.myportfolio.dto.response.auth.UserResponse;
 import com.stocks.myportfolio.entity.User;
 import com.stocks.myportfolio.entity.UserGrowwConfig;
+import com.stocks.myportfolio.integration.groww.GrowwClient;
 import com.stocks.myportfolio.repository.UserGrowwConfigRepository;
 import com.stocks.myportfolio.repository.UserRepository;
 import com.stocks.myportfolio.service.RsaKeyService;
@@ -20,6 +23,9 @@ public class ProfileController {
     private final UserRepository userRepository;
     private final UserGrowwConfigRepository growwConfigRepository;
     private final RsaKeyService rsaKeyService;
+
+    @Autowired(required = false)
+    private GrowwClient growwClient;
 
     public ProfileController(UserRepository userRepository, UserGrowwConfigRepository growwConfigRepository,
             RsaKeyService rsaKeyService) {
@@ -83,7 +89,23 @@ public class ProfileController {
                 && config.getApiSecretEncrypted() != null && !config.getApiSecretEncrypted().isBlank();
         config.setEnabled(hasCreds);
         growwConfigRepository.save(config);
-        return Map.of("message", "Groww config updated", "enabled", config.isEnabled());
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("message", "Groww config saved");
+        result.put("enabled", config.isEnabled());
+
+        if (hasCreds && growwClient != null) {
+            Map<String, Object> validation = growwClient.validateCredentials(
+                    config.getAccessTokenEncrypted(), config.getApiSecretEncrypted());
+            boolean valid = Boolean.TRUE.equals(validation.get("valid"));
+            config.setEnabled(valid);
+            growwConfigRepository.save(config);
+            result.put("enabled", valid);
+            result.put("connected", valid);
+            result.put("validationMessage", validation.get("message"));
+        }
+
+        return result;
     }
 
     @DeleteMapping("/groww")

@@ -56,8 +56,15 @@ export default function ProfilePage() {
       if (encToken) data.accessToken = encToken;
       if (encSecret) data.apiSecret = encSecret;
       const resp = await client.put('/profile/groww', data);
-      setMsg('Groww config updated');
-      setGrowwStatus(resp.data);
+      const result = resp.data;
+      if (result.connected) {
+        setMsg(result.validationMessage || 'Connected to Groww successfully');
+      } else if (result.connected === false) {
+        setError(result.validationMessage || 'Groww connection failed — check credentials');
+      } else {
+        setMsg('Groww config saved');
+      }
+      setGrowwStatus({ enabled: result.enabled, hasAccessToken: true, hasApiSecret: true });
       setGrowwForm({ accessToken: '', apiSecret: '' });
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) setError(err.response?.data?.message || 'Groww config update failed');

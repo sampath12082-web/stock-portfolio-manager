@@ -52,6 +52,44 @@ public class GrowwClient {
                 .orElseThrow(() -> new MarketDataException("Groww not configured. Set credentials in Profile → Groww Config."));
     }
 
+    public Map<String, Object> validateCredentials(String accessToken, String apiSecret) {
+        try {
+            long timestamp = System.currentTimeMillis() / 1000;
+            String checksum = generateChecksum(apiSecret, String.valueOf(timestamp));
+
+            RestClient loginClient = RestClient.builder()
+                    .baseUrl(properties.getBaseUrl())
+                    .defaultHeader("Authorization", "Bearer " + accessToken)
+                    .defaultHeader("Content-Type", "application/json")
+                    .defaultHeader("Accept", "application/json")
+                    .defaultHeader("X-API-VERSION", properties.getApiVersion())
+                    .defaultHeader("x-request-id", UUID.randomUUID().toString())
+                    .build();
+
+            JsonNode response = loginClient.post()
+                    .uri("/v1/token/api/access")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("key_type", "approval", "checksum", checksum, "timestamp", timestamp))
+                    .retrieve()
+                    .body(JsonNode.class);
+
+            String token = response != null ? response.path("token").asText("") : "";
+            if (!token.isBlank()) {
+                Long userId = currentUser.getUserId();
+                if (userId != null) {
+                    userSessions.put(userId, new SessionEntry(token, timestamp + 86400));
+                }
+                return Map.of("valid", true, "message", "Connected to Groww successfully");
+            }
+            return Map.of("valid", false, "message", "Groww returned empty session token");
+        } catch (Exception e) {
+            String msg = e.getMessage();
+            if (msg != null && msg.contains("401")) return Map.of("valid", false, "message", "Invalid access token — may be expired. Get a fresh token from Groww.");
+            if (msg != null && msg.contains("403")) return Map.of("valid", false, "message", "Invalid API secret or checksum mismatch.");
+            return Map.of("valid", false, "message", "Connection failed: " + (msg != null ? msg : "Unknown error"));
+        }
+    }
+
     public GrowwStockResponse getQuote(String tradingSymbol, String exchange) {
         try {
             return buildClient().get()
