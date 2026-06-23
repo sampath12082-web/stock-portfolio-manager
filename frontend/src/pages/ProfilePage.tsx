@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const [form, setForm] = useState({ firstName: user?.firstName || '', lastName: user?.lastName || '', phone: user?.phone || '' });
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
   const [growwForm, setGrowwForm] = useState({ accessToken: '', apiSecret: '' });
-  const [growwStatus, setGrowwStatus] = useState<{ enabled: boolean; hasAccessToken: boolean; hasApiSecret: boolean } | null>(null);
+  const [growwStatus, setGrowwStatus] = useState<{ enabled: boolean; connected?: boolean; hasAccessToken: boolean; hasApiSecret: boolean; validationMessage?: string; accessTokenLength?: number } | null>(null);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -146,11 +146,17 @@ export default function ProfilePage() {
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-5">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1.5 mb-3 border-b border-gray-100">Groww Config</h3>
             {growwStatus && (
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`w-2 h-2 rounded-full ${growwStatus.enabled ? 'bg-emerald-500' : 'bg-gray-300'}`} />
-                <span className="text-xs text-gray-500">{growwStatus.enabled ? 'Connected' : 'Not connected'}</span>
-                {growwStatus.hasAccessToken && <span className="text-xs text-emerald-600">Token set</span>}
-                {growwStatus.hasApiSecret && <span className="text-xs text-emerald-600">Secret set</span>}
+              <div className="mb-3">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${growwStatus.connected ? 'bg-emerald-500' : growwStatus.hasAccessToken ? 'bg-red-400' : 'bg-gray-300'}`} />
+                  <span className={`text-xs font-medium ${growwStatus.connected ? 'text-emerald-600' : growwStatus.hasAccessToken ? 'text-red-500' : 'text-gray-500'}`}>
+                    {growwStatus.connected ? 'Connected' : growwStatus.hasAccessToken ? 'Disconnected' : 'Not configured'}
+                  </span>
+                  {growwStatus.hasAccessToken && <span className="text-[10px] text-gray-400">Token: {growwStatus.accessTokenLength} chars</span>}
+                </div>
+                {growwStatus.validationMessage && !growwStatus.connected && (
+                  <p className="text-xs text-red-500 mt-1">{growwStatus.validationMessage}</p>
+                )}
               </div>
             )}
             <form onSubmit={handleSaveGroww} className="space-y-3">

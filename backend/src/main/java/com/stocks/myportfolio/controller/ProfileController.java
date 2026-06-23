@@ -63,28 +63,52 @@ public class ProfileController {
         return toResponse(user);
     }
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ProfileController.class);
+
     @GetMapping("/groww")
     public Map<String, Object> getGrowwConfig(Principal principal) {
         User user = findUser(principal.getName());
         return growwConfigRepository.findByUser(user)
                 .map(c -> {
                     Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("enabled", c.isEnabled());
-                    m.put("hasAccessToken", c.getAccessTokenEncrypted() != null && !c.getAccessTokenEncrypted().isBlank());
-                    m.put("hasApiSecret", c.getApiSecretEncrypted() != null && !c.getApiSecretEncrypted().isBlank());
-                    if (c.getAccessTokenEncrypted() != null && c.getAccessTokenEncrypted().length() > 10) {
+                    boolean hasToken = c.getAccessTokenEncrypted() != null && !c.getAccessTokenEncrypted().isBlank();
+                    boolean hasSecret = c.getApiSecretEncrypted() != null && !c.getApiSecretEncrypted().isBlank();
+                    m.put("hasAccessToken", hasToken);
+                    m.put("hasApiSecret", hasSecret);
+
+                    if (hasToken && hasSecret && growwClient != null) {
+                        Map<String, Object> validation = growwClient.validateCredentials(
+                                c.getAccessTokenEncrypted(), c.getApiSecretEncrypted());
+                        boolean connected = Boolean.TRUE.equals(validation.get("valid"));
+                        m.put("connected", connected);
+                        m.put("enabled", connected);
+                        m.put("validationMessage", validation.get("message"));
+                        if (!connected) {
+                            log.warn("Groww connection failed for user {}: {}", user.getEmail(), validation.get("message"));
+                            c.setEnabled(false);
+                            growwConfigRepository.save(c);
+                        } else if (!c.isEnabled()) {
+                            c.setEnabled(true);
+                            growwConfigRepository.save(c);
+                        }
+                    } else {
+                        m.put("connected", false);
+                        m.put("enabled", c.isEnabled());
+                    }
+
+                    if (hasToken) {
                         String t = c.getAccessTokenEncrypted();
-                        m.put("accessTokenPreview", t.substring(0, 6) + "..." + t.substring(t.length() - 4));
+                        m.put("accessTokenPreview", t.substring(0, Math.min(6, t.length())) + "..." + t.substring(Math.max(0, t.length() - 4)));
                         m.put("accessTokenLength", t.length());
                     }
-                    if (c.getApiSecretEncrypted() != null && c.getApiSecretEncrypted().length() > 10) {
+                    if (hasSecret) {
                         String s = c.getApiSecretEncrypted();
-                        m.put("apiSecretPreview", s.substring(0, 6) + "..." + s.substring(s.length() - 4));
+                        m.put("apiSecretPreview", s.substring(0, Math.min(6, s.length())) + "..." + s.substring(Math.max(0, s.length() - 4)));
                         m.put("apiSecretLength", s.length());
                     }
                     return m;
                 })
-                .orElse(Map.of("enabled", false, "hasAccessToken", false, "hasApiSecret", false));
+                .orElse(Map.of("enabled", false, "hasAccessToken", false, "hasApiSecret", false, "connected", false));
     }
 
     @PutMapping("/groww")
