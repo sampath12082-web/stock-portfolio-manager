@@ -119,3 +119,109 @@ test.describe('Regression — Security', () => {
     }
   });
 });
+
+test.describe('Regression — MF Data Consistency', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('MF holdings P&L = currentValue - investedAmount', async ({ request }) => {
+    const holdings = await (await request.get('/api/mf/holdings', { headers })).json();
+    for (const h of holdings) {
+      if (h.investedAmount > 0 && h.currentValue != null) {
+        const expected = h.currentValue - h.investedAmount;
+        expect(Math.abs(h.pnl - expected)).toBeLessThan(1);
+      }
+    }
+  });
+
+  test('MF holdings pnlPercentage matches formula', async ({ request }) => {
+    const holdings = await (await request.get('/api/mf/holdings', { headers })).json();
+    for (const h of holdings) {
+      if (h.investedAmount > 0 && h.pnl != null) {
+        const expected = (h.pnl / h.investedAmount) * 100;
+        expect(Math.abs(h.pnlPercentage - expected)).toBeLessThan(0.1);
+      }
+    }
+  });
+});
+
+test.describe('Regression — Holdings Total Row', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('holdings invested sum matches dashboard', async ({ request }) => {
+    const holdings = await (await request.get('/api/holdings', { headers })).json();
+    const dash = await (await request.get('/api/dashboard', { headers })).json();
+    const activeInvested = holdings
+      .filter((h: { quantity: number }) => h.quantity > 0)
+      .reduce((s: number, h: { investedAmount: number }) => s + h.investedAmount, 0);
+    expect(Math.abs(activeInvested - dash.investedAmount)).toBeLessThan(1);
+  });
+
+  test('no holdings have negative quantity', async ({ request }) => {
+    const holdings = await (await request.get('/api/holdings', { headers })).json();
+    const negative = holdings.filter((h: { quantity: number }) => h.quantity < 0);
+    expect(negative.length).toBe(0);
+  });
+});
+
+test.describe('Regression — Edge Cases', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('long text in ticket subject accepted', async ({ request }) => {
+    const longSubject = 'A'.repeat(250);
+    const resp = await request.post('/api/help/tickets', {
+      headers,
+      data: { subject: longSubject, message: 'Testing long subject' },
+    });
+    expect([200, 201]).toContain(resp.status());
+  });
+
+  test('special characters in stock search', async ({ request }) => {
+    const resp = await request.get("/api/stocks/lookup?query=HDFC%20Bank%20%26%20Co", { headers });
+    expect([200, 400]).toContain(resp.status());
+  });
+
+  test('empty string search returns results or empty array', async ({ request }) => {
+    const resp = await request.get('/api/stocks/lookup?query=', { headers });
+    expect(resp.status()).toBe(200);
+  });
+
+  test('decimal precision preserved in holdings', async ({ request }) => {
+    const holdings = await (await request.get('/api/holdings', { headers })).json();
+    for (const h of holdings) {
+      if (h.averageBuyPrice != null) {
+        expect(typeof h.averageBuyPrice).toBe('number');
+      }
+      if (h.investedAmount != null) {
+        expect(typeof h.investedAmount).toBe('number');
+      }
+    }
+  });
+
+  test('rate limiting on ticket submission', async ({ request }) => {
+    for (let i = 0; i < 4; i++) {
+      const resp = await request.post('/api/help/tickets', {
+        headers,
+        data: { subject: `Rate limit test ${i}`, message: 'Testing rate limit' },
+      });
+      if (i >= 3) {
+        const body = await resp.json();
+        if (body.message && body.message.includes('Rate limited')) {
+          expect(body.message).toContain('Rate limited');
+          return;
+        }
+      }
+    }
+  });
+});

@@ -100,8 +100,17 @@ public class AuthController {
             return Map.of("message", "email and password are required");
         }
 
-        if (userRepository.findByEmail(email).isPresent()) {
-            return Map.of("message", "Admin user already exists. No action taken.");
+        var existing = userRepository.findByEmail(email);
+        if (existing.isPresent()) {
+            boolean resetPassword = "true".equalsIgnoreCase(body.get("resetPassword"));
+            if (resetPassword) {
+                User admin = existing.get();
+                admin.setPasswordHash(passwordEncoder.encode(password));
+                admin.setEmailVerified(true);
+                userRepository.save(admin);
+                return Map.of("message", "Admin password reset for: " + email);
+            }
+            return Map.of("message", "Admin user already exists. Pass resetPassword=true to reset.");
         }
 
         User admin = new User();

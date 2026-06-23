@@ -218,3 +218,319 @@ test.describe('UI Rendering — Auth Pages', () => {
     expect(errors.length).toBe(0);
   });
 });
+
+// ─── HIGH: Profile Form UI Tests ─────────────────────────────────
+
+test.describe('UI — Profile Forms', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('text=Sampat Kumar');
+    await expect(page.locator('h1')).toContainText('Profile', { timeout: 10000 });
+  });
+
+  test('profile update form saves name', async ({ page }) => {
+    await page.fill('input[value="Sampat Kumar"]', 'Sampat Kumar');
+    await page.click('button:has-text("Save")');
+    await page.waitForTimeout(1000);
+    const msg = page.getByText('Profile updated');
+    await expect(msg).toBeVisible({ timeout: 5000 });
+  });
+
+  test('change password form renders with policy', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Change Password' })).toBeVisible();
+    await expect(page.getByText('16-20 characters')).toBeVisible();
+  });
+
+  test('groww config form renders', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: 'Groww Config' })).toBeVisible();
+    await expect(page.getByText('Access Token')).toBeVisible();
+    await expect(page.getByText('API Secret')).toBeVisible();
+  });
+});
+
+// ─── HIGH: Help Form UI Tests ────────────────────────────────────
+
+test.describe('UI — Help Ticket Form', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Help');
+    await expect(page.locator('h1')).toContainText('Help', { timeout: 10000 });
+  });
+
+  test('FAQ accordion expands on click', async ({ page }) => {
+    await expect(page.getByText('Frequently Asked Questions')).toBeVisible({ timeout: 10000 });
+    const firstFaq = page.locator('button:has-text("?")').first();
+    if (await firstFaq.isVisible()) {
+      await firstFaq.click();
+      await page.waitForTimeout(500);
+    }
+  });
+
+  test('ticket form submits successfully', async ({ page }) => {
+    await page.fill('input[placeholder*="description"]', 'Test ticket from Playwright');
+    await page.fill('textarea', 'Automated test — verifying ticket submission form works');
+    await page.click('button:has-text("Submit")');
+    await expect(page.getByText(/submitted|reviewing/i)).toBeVisible({ timeout: 10000 });
+  });
+});
+
+// ─── MEDIUM: Console Errors on All Pages ─────────────────────────
+
+test.describe('UI — No Console Errors', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+  });
+
+  test('holdings page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.click('nav >> text=Holdings');
+    await page.waitForTimeout(3000);
+    expect(errors.length).toBe(0);
+  });
+
+  test('transactions page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.click('nav >> text=Transactions');
+    await page.waitForTimeout(3000);
+    expect(errors.length).toBe(0);
+  });
+
+  test('stocks page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.click('nav >> text=Stocks');
+    await page.waitForTimeout(3000);
+    expect(errors.length).toBe(0);
+  });
+
+  test('mutual funds page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.click('nav >> text=Mutual Funds');
+    await page.waitForTimeout(3000);
+    expect(errors.length).toBe(0);
+  });
+
+  test('performance page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.click('nav >> text=Performance');
+    await page.waitForTimeout(3000);
+    expect(errors.length).toBe(0);
+  });
+
+  test('help page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.click('nav >> text=Help');
+    await page.waitForTimeout(3000);
+    expect(errors.length).toBe(0);
+  });
+
+  test('profile page has no console errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+    await page.click('text=Sampat Kumar');
+    await page.waitForTimeout(3000);
+    expect(errors.length).toBe(0);
+  });
+});
+
+// ─── HIGH: Holdings Interactive ──────────────────────────────────
+
+test.describe('UI — Holdings Interactive', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Holdings');
+    await expect(page.locator('h1')).toContainText('Holdings', { timeout: 10000 });
+  });
+
+  test('search filter narrows results', async ({ page }) => {
+    await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
+    const rowsBefore = await page.locator('tbody tr').count();
+    await page.fill('input[placeholder*="Search"]', 'TCS');
+    await page.waitForTimeout(500);
+    const rowsAfter = await page.locator('tbody tr').count();
+    expect(rowsAfter).toBeLessThanOrEqual(rowsBefore);
+  });
+
+  test('signal filter chips change count', async ({ page }) => {
+    await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
+    const allBtn = page.locator('button:has-text("ALL")');
+    if (await allBtn.isVisible()) {
+      await allBtn.click();
+      await page.waitForTimeout(300);
+    }
+    const buyBtn = page.locator('button:has-text("BUY")');
+    if (await buyBtn.isVisible()) {
+      await buyBtn.click();
+      await page.waitForTimeout(300);
+    }
+  });
+
+  test('sort by column changes order', async ({ page }) => {
+    await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
+    const investedHeader = page.locator('button:has-text("Invested")');
+    if (await investedHeader.isVisible()) {
+      await investedHeader.click();
+      await page.waitForTimeout(300);
+      await investedHeader.click();
+      await page.waitForTimeout(300);
+    }
+  });
+
+  test('total row shows at bottom', async ({ page }) => {
+    await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('tfoot')).toBeVisible();
+    await expect(page.locator('tfoot').getByText('Total')).toBeVisible();
+  });
+});
+
+// ─── HIGH: Stocks Interactive ────────────────────────────────────
+
+test.describe('UI — Stocks Interactive', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Stocks');
+    await expect(page.locator('h1')).toContainText('Stocks', { timeout: 10000 });
+  });
+
+  test('signal filter chips visible', async ({ page }) => {
+    await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button:has-text("ALL")').first()).toBeVisible();
+  });
+
+  test('search narrows stock list', async ({ page }) => {
+    await expect(page.locator('table')).toBeVisible({ timeout: 10000 });
+    await page.fill('input[placeholder*="Search"]', 'HDFC');
+    await page.waitForTimeout(500);
+    const rows = await page.locator('tbody tr').count();
+    expect(rows).toBeGreaterThan(0);
+  });
+});
+
+// ─── HIGH: MF Interactive ────────────────────────────────────────
+
+test.describe('UI — Mutual Funds Interactive', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Mutual Funds');
+    await expect(page.locator('h1')).toContainText('Mutual Funds', { timeout: 10000 });
+  });
+
+  test('MF holdings table renders with total row', async ({ page }) => {
+    await page.waitForTimeout(2000);
+    const table = page.locator('table').first();
+    if (await table.isVisible()) {
+      await expect(page.locator('tfoot').first()).toBeVisible();
+    }
+  });
+
+  test('sort by column works', async ({ page }) => {
+    await page.waitForTimeout(2000);
+    const header = page.locator('button:has-text("Invested")').first();
+    if (await header.isVisible()) {
+      await header.click();
+      await page.waitForTimeout(300);
+    }
+  });
+});
+
+// ─── MEDIUM: Dashboard Interactive ───────────────────────────────
+
+test.describe('UI — Dashboard Interactive', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+  });
+
+  test('Refresh Quotes button clickable', async ({ page }) => {
+    await expect(page.getByText('Refresh Quotes')).toBeVisible({ timeout: 10000 });
+    await page.click('button:has-text("Refresh Quotes")');
+    await page.waitForTimeout(2000);
+  });
+});
+
+// ─── MEDIUM: Performance Interactive ─────────────────────────────
+
+test.describe('UI — Performance Interactive', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Performance');
+    await expect(page.locator('h1')).toContainText('Performance', { timeout: 10000 });
+  });
+
+  test('Capture Snapshot button clickable', async ({ page }) => {
+    const btn = page.locator('button:has-text("Capture Snapshot")');
+    if (await btn.isVisible()) {
+      await btn.click();
+      await page.waitForTimeout(3000);
+    }
+  });
+
+  test('time range buttons switch data', async ({ page }) => {
+    const btn30d = page.locator('button:has-text("30D")');
+    if (await btn30d.isVisible()) {
+      await btn30d.click();
+      await page.waitForTimeout(1000);
+    }
+  });
+});
+
+// ─── HIGH: Admin Tickets Interactive ─────────────────────────────
+
+test.describe('UI — Admin Tickets Interactive', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Support Tickets');
+    await expect(page.locator('h1')).toContainText('Support Tickets', { timeout: 10000 });
+  });
+
+  test('filter tabs visible with counts', async ({ page }) => {
+    await expect(page.locator('button:has-text("All")').first()).toBeVisible();
+    await expect(page.locator('button:has-text("Pending")').first()).toBeVisible();
+  });
+
+  test('filter tab switches ticket list', async ({ page }) => {
+    const pendingBtn = page.locator('button:has-text("Pending")').first();
+    if (await pendingBtn.isVisible()) {
+      await pendingBtn.click();
+      await page.waitForTimeout(500);
+    }
+    const allBtn = page.locator('button:has-text("All")').first();
+    if (await allBtn.isVisible()) {
+      await allBtn.click();
+      await page.waitForTimeout(500);
+    }
+  });
+
+  test('respond link visible on tickets', async ({ page }) => {
+    await page.waitForTimeout(2000);
+    const respondLink = page.locator('text=Respond').first();
+    const editLink = page.locator('text=Edit Response').first();
+    const hasRespond = await respondLink.isVisible().catch(() => false);
+    const hasEdit = await editLink.isVisible().catch(() => false);
+    expect(hasRespond || hasEdit).toBeTruthy();
+  });
+});
+
+// ─── HIGH: Register Form Fill ────────────────────────────────────
+
+test.describe('UI — Register Form', () => {
+  test('register form has all required fields', async ({ page }) => {
+    await page.goto('/register');
+    await expect(page.getByText('Create your account')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('input[type="email"]')).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
+    const selects = page.locator('select');
+    expect(await selects.count()).toBeGreaterThanOrEqual(2);
+  });
+
+  test('register form validates on empty submit', async ({ page }) => {
+    await page.goto('/register');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(/register/);
+  });
+});

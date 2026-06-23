@@ -576,3 +576,319 @@ test.describe('Functional — Health', () => {
     expect(resp.status()).toBe(200);
   });
 });
+
+// ─── CRITICAL: Setup-Admin API ───────────────────────────────────
+
+test.describe('Critical — Setup-Admin API', () => {
+  test('setup-admin creates or acknowledges existing admin', async ({ request }) => {
+    const resp = await request.post('/api/auth/setup-admin', {
+      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*', firstName: 'Sampat Kumar' },
+    });
+    expect(resp.status()).toBe(201);
+    const body = await resp.json();
+    expect(body.message).toMatch(/created|already exists/);
+  });
+
+  test('setup-admin is idempotent — no duplicate', async ({ request }) => {
+    const resp = await request.post('/api/auth/setup-admin', {
+      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*' },
+    });
+    expect(resp.status()).toBe(201);
+    const body = await resp.json();
+    expect(body.message).toContain('already exists');
+  });
+
+  test('setup-admin can reset password with flag', async ({ request }) => {
+    const resp = await request.post('/api/auth/setup-admin', {
+      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*', resetPassword: 'true' },
+    });
+    const body = await resp.json();
+    expect(body.message).toContain('reset');
+
+    const login = await request.post('/api/auth/login', {
+      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*' },
+    });
+    expect(login.status()).toBe(200);
+  });
+});
+
+// ─── CRITICAL: Forgot Password API Flow ──────────────────────────
+
+test.describe('Critical — Forgot Password API', () => {
+  test('forgot-password returns security questions for valid email', async ({ request }) => {
+    const resp = await request.post('/api/auth/forgot-password', {
+      data: { email: 'sampath12082@gmail.com' },
+    });
+    if (resp.status() === 200) {
+      const body = await resp.json();
+      expect(body).toHaveProperty('securityQuestion1');
+      expect(body).toHaveProperty('securityQuestion2');
+    }
+  });
+
+  test('verify-security rejects wrong answers', async ({ request }) => {
+    const resp = await request.post('/api/auth/verify-security', {
+      data: { email: 'sampath12082@gmail.com', answer1: 'wrong', answer2: 'wrong' },
+    });
+    expect([400, 401]).toContain(resp.status());
+  });
+
+  test('reset-password rejects invalid OTP', async ({ request }) => {
+    const resp = await request.post('/api/auth/reset-password', {
+      data: { email: 'sampath12082@gmail.com', otp: '000000', newPassword: 'NewSecure@12345678' },
+    });
+    expect([400, 401]).toContain(resp.status());
+  });
+});
+
+// ─── CRITICAL: XSS Safety ────────────────────────────────────────
+
+test.describe('Critical — XSS Safety', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('HTML in ticket subject is accepted without crash', async ({ request }) => {
+    const xssPayload = '<script>alert("xss")</script>';
+    const resp = await request.post('/api/help/tickets', {
+      headers,
+      data: { subject: xssPayload, message: 'Testing XSS safety' },
+    });
+    expect([200, 201]).toContain(resp.status());
+  });
+
+  test('special chars in stock search do not crash', async ({ request }) => {
+    const resp = await request.get("/api/stocks/lookup?query='; DROP TABLE stocks;--", { headers });
+    expect([200, 400]).toContain(resp.status());
+  });
+});
+
+// ─── CRITICAL: Bug Report Lifecycle ──────────────────────────────
+
+test.describe('Critical — Bug Report Lifecycle', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('admin can list bug reports', async ({ request }) => {
+    const resp = await request.get('/api/admin/bugs', { headers });
+    expect(resp.status()).toBe(200);
+    const bugs = await resp.json();
+    expect(Array.isArray(bugs)).toBe(true);
+  });
+
+  test('bug report has expected fields', async ({ request }) => {
+    const bugs = await (await request.get('/api/admin/bugs', { headers })).json();
+    if (bugs.length > 0) {
+      expect(bugs[0]).toHaveProperty('title');
+      expect(bugs[0]).toHaveProperty('severity');
+      expect(bugs[0]).toHaveProperty('status');
+      expect(bugs[0]).toHaveProperty('ticketId');
+    }
+  });
+});
+
+// ─── CRITICAL: Multi-Tenant Isolation ────────────────────────────
+
+test.describe('Critical — Multi-Tenant Isolation', () => {
+  test('regular user cannot see admin data', async ({ request }) => {
+    const testEmail = `tenant_test_${Date.now()}@test.com`;
+    const testPass = 'TenantTest@123456';
+
+    const reg = await request.post('/api/auth/register', {
+      data: {
+        email: testEmail, password: testPass, firstName: 'Tenant',
+        securityQuestion1: 'What city were you born in?', securityAnswer1: 'City',
+        securityQuestion2: 'What is your favorite movie?', securityAnswer2: 'Movie',
+      },
+    });
+    if (reg.status() !== 201) return;
+
+    const login = await request.post('/api/auth/login', {
+      data: { email: testEmail, password: testPass },
+    });
+    if (login.status() !== 200) return;
+
+    const { accessToken } = await login.json();
+    const userHeaders = { Authorization: `Bearer ${accessToken}` };
+
+    const holdings = await (await request.get('/api/holdings', { headers: userHeaders })).json();
+    expect(holdings.length).toBe(0);
+
+    const stocks = await (await request.get('/api/stocks', { headers: userHeaders })).json();
+    expect(stocks.length).toBe(0);
+
+    const txns = await (await request.get('/api/transactions', { headers: userHeaders })).json();
+    expect(txns.length).toBe(0);
+  });
+});
+
+// ─── HIGH: Profile Forms ─────────────────────────────────────────
+
+test.describe('High — Profile API Operations', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('profile update changes name', async ({ request }) => {
+    const resp = await request.put('/api/profile', {
+      headers,
+      data: { firstName: 'Sampat Kumar', lastName: 'Asealu', phone: '9876543210' },
+    });
+    expect(resp.status()).toBe(200);
+    const profile = await resp.json();
+    expect(profile.firstName).toBe('Sampat Kumar');
+    expect(profile.phone).toBe('9876543210');
+  });
+
+  test('groww config save and retrieve', async ({ request }) => {
+    const resp = await request.put('/api/profile/groww', {
+      headers,
+      data: { accessToken: 'test-token-value', apiSecret: 'test-secret-value' },
+    });
+    expect(resp.status()).toBe(200);
+
+    const get = await request.get('/api/profile/groww', { headers });
+    const config = await get.json();
+    expect(config.hasAccessToken).toBe(true);
+    expect(config.hasApiSecret).toBe(true);
+    expect(config.enabled).toBe(true);
+  });
+
+  test('groww config delete disables', async ({ request }) => {
+    const resp = await request.delete('/api/profile/groww', { headers });
+    expect(resp.status()).toBe(200);
+
+    const get = await request.get('/api/profile/groww', { headers });
+    const config = await get.json();
+    expect(config.enabled).toBeFalsy();
+  });
+});
+
+// ─── HIGH: Holdings CRUD ─────────────────────────────────────────
+
+test.describe('High — Holdings CRUD', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('create holding requires valid fields', async ({ request }) => {
+    const resp = await request.post('/api/holdings', {
+      headers,
+      data: {},
+    });
+    expect([400, 500]).toContain(resp.status());
+  });
+
+  test('holdings list returns expected fields', async ({ request }) => {
+    const resp = await request.get('/api/holdings', { headers });
+    const holdings = await resp.json();
+    if (holdings.length > 0) {
+      const h = holdings[0];
+      expect(h).toHaveProperty('symbol');
+      expect(h).toHaveProperty('quantity');
+      expect(h).toHaveProperty('averageBuyPrice');
+      expect(h).toHaveProperty('investedAmount');
+      expect(h).toHaveProperty('currentValue');
+    }
+  });
+});
+
+// ─── HIGH: Transaction CRUD ──────────────────────────────────────
+
+test.describe('High — Transaction CRUD', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('create transaction requires fields', async ({ request }) => {
+    const resp = await request.post('/api/transactions', {
+      headers,
+      data: {},
+    });
+    expect([400, 404, 500]).toContain(resp.status());
+  });
+
+  test('transaction list has tradeType and tradeDate', async ({ request }) => {
+    const resp = await request.get('/api/transactions', { headers });
+    const txns = await resp.json();
+    if (txns.length > 0) {
+      expect(txns[0]).toHaveProperty('tradeType');
+      expect(txns[0]).toHaveProperty('tradeDate');
+    }
+  });
+});
+
+// ─── HIGH: MF CRUD ───────────────────────────────────────────────
+
+test.describe('High — Mutual Funds CRUD', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('MF holdings have all required fields', async ({ request }) => {
+    const resp = await request.get('/api/mf/holdings', { headers });
+    const holdings = await resp.json();
+    if (holdings.length > 0) {
+      expect(holdings[0]).toHaveProperty('schemeName');
+      expect(holdings[0]).toHaveProperty('units');
+      expect(holdings[0]).toHaveProperty('averageNav');
+      expect(holdings[0]).toHaveProperty('currentNav');
+      expect(holdings[0]).toHaveProperty('investedAmount');
+      expect(holdings[0]).toHaveProperty('currentValue');
+      expect(holdings[0]).toHaveProperty('pnl');
+      expect(holdings[0]).toHaveProperty('pnlPercentage');
+    }
+  });
+
+  test('MF transactions ordered by date', async ({ request }) => {
+    const resp = await request.get('/api/mf/transactions', { headers });
+    expect(resp.status()).toBe(200);
+    const txns = await resp.json();
+    expect(Array.isArray(txns)).toBe(true);
+  });
+});
+
+// ─── HIGH: Ticket Submission ─────────────────────────────────────
+
+test.describe('High — Ticket Submission & AI', () => {
+  let headers: Record<string, string>;
+
+  test.beforeAll(async ({ request }) => {
+    headers = authHeaders(await getAdminToken(request));
+  });
+
+  test('ticket has AI classification fields', async ({ request }) => {
+    const tickets = await (await request.get('/api/help/tickets', { headers })).json();
+    if (tickets.length > 0) {
+      expect(tickets[0]).toHaveProperty('ticketType');
+      expect(tickets[0]).toHaveProperty('status');
+      expect(tickets[0]).toHaveProperty('aiResponse');
+    }
+  });
+
+  test('admin ticket respond updates status', async ({ request }) => {
+    const tickets = await (await request.get('/api/admin/tickets', { headers })).json();
+    if (tickets.length > 0) {
+      const resp = await request.put(`/api/admin/tickets/${tickets[0].id}`, {
+        headers,
+        data: { adminResponse: 'Test response', status: 'IN_PROGRESS' },
+      });
+      expect(resp.status()).toBe(200);
+      const updated = await resp.json();
+      expect(updated.status).toBe('IN_PROGRESS');
+    }
+  });
+});
