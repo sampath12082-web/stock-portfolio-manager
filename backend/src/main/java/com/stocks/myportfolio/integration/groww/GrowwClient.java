@@ -59,7 +59,7 @@ public class GrowwClient {
                             exchange, tradingSymbol)
                     .retrieve()
                     .body(GrowwStockResponse.class);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException(
                     "Failed to fetch quote for " + tradingSymbol, e);
         }
@@ -86,7 +86,7 @@ public class GrowwClient {
                 }
             }
             return allResults;
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch OHLC data", e);
         }
     }
@@ -97,7 +97,7 @@ public class GrowwClient {
                     .uri("/v1/user/portfolio/holdings")
                     .retrieve()
                     .body(GrowwPortfolioResponse.class);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch holdings from Groww", e);
         }
     }
@@ -108,7 +108,7 @@ public class GrowwClient {
                     .uri("/v1/user/positions?type=TODAYS")
                     .retrieve()
                     .body(JsonNode.class);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch positions from Groww", e);
         }
     }
@@ -119,7 +119,7 @@ public class GrowwClient {
                     .uri("/v1/user/orders?type=ALL&status=ALL")
                     .retrieve()
                     .body(JsonNode.class);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch orders from Groww", e);
         }
     }
@@ -130,7 +130,7 @@ public class GrowwClient {
                     .uri("/v1/user/details")
                     .retrieve()
                     .body(JsonNode.class);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch account details from Groww", e);
         }
     }
@@ -149,7 +149,7 @@ public class GrowwClient {
                 }
             }
             return orders;
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch orders from Groww", e);
         }
     }
@@ -160,7 +160,7 @@ public class GrowwClient {
                     .uri("/v1/user/margin")
                     .retrieve()
                     .body(JsonNode.class);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch margin from Groww", e);
         }
     }
@@ -171,7 +171,7 @@ public class GrowwClient {
                     .uri("/v1/user/positions?type=TODAYS")
                     .retrieve()
                     .body(JsonNode.class);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch positions from Groww", e);
         }
     }
@@ -186,7 +186,7 @@ public class GrowwClient {
                 throw new MarketDataException("Empty response from Groww profile");
             }
             return root.has("payload") ? root.path("payload") : root;
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to fetch user profile from Groww", e);
         }
     }
@@ -254,7 +254,7 @@ public class GrowwClient {
             log.debug("Groww session established for user {}", userId);
             return sessionToken;
 
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Failed to obtain Groww session token", e);
         }
     }
@@ -265,7 +265,7 @@ public class GrowwClient {
             String input = apiSecret + "|" + timestamp;
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
+        } catch (MarketDataException e) { throw e; } catch (Exception e) {
             throw new MarketDataException("Checksum generation failed", e);
         }
     }
