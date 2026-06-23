@@ -1,149 +1,92 @@
 # Test Coverage Audit Report
 
-## Date: 2026-06-23
+## Latest Audit: 2026-06-23 (Quality Rules Applied)
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Frontend pages | 15 |
-| Form elements across app | 135 |
-| API endpoints | 75 |
-| Existing tests | 127 |
-| Form fill interactions in tests | 2 |
-| DELETE tests | 0 |
-| XSS/injection tests | 0 |
-| Setup-admin tests | 0 |
-| Gaps found | 42 |
+| Total tests | 190 |
+| Form fill interactions | 23 |
+| Network intercepts | 5 |
+| Cross-page E2E flows | 5 |
+| Fresh state tests | 2 |
+| Error path references | 61 (32%) |
 
-## Page-by-Page Coverage
+## Per-Rule Compliance
 
-| Page | Forms | API Tests | UI Tests | Form Tests | Gaps |
-|------|-------|-----------|----------|------------|------|
-| Dashboard | 0 | 14 | 9 | — | Refresh Quotes click, Orders toggle |
-| Holdings | 6 | 21 | 5 | 0 | Add/Edit form, search, sort, filter chips, total row |
-| Transactions | 8 | 20 | 4 | 0 | Add form, upload, filters, sort |
-| Stocks | 7 | 15 | 4 | 0 | Add form, search, signal/target chips |
-| Mutual Funds | 9 | 0 | 0 | 0 | Entire page untested by name |
-| Performance | 0 | 11 | 4 | — | Capture snapshot button |
-| Profile | 8 | 19 | 2 | 0 | Update profile form, change password UI, Groww config form |
-| Help | 2 | 10 | 4 | 0 | Submit ticket form, FAQ expand/collapse |
-| Admin Users | 0 | 0 | 0 | — | Page tests reference "admin" generically |
-| Admin Tickets | 3 | 0 | 0 | 0 | Respond form, bug approve/reject, filter tabs |
-| Login | 2 | 7 | 15 | Yes | Only page with form fill tests |
-| Register | 9 | 14 | 5 | 0 | No form fill, no security question select |
-| Forgot Password | 5 | 0 | 0 | 0 | 3-step flow completely untested |
-| AI Search | 1 | 0 | 0 | 0 | Skipped — redesign pending |
-| Signals | 9 | 25 | 2 | 0 | Create/edit signal forms |
+| Rule | Score | Detail |
+|------|-------|--------|
+| R1: Outcome vs status | **LOW** | ~50 status-only assertions with no behavior verification |
+| R2: Form fill+submit | **MEDIUM** | 23 fills but mostly in 2 files. 12 pages with forms, most have no fill test |
+| R3: Mutation verify-after | **LOW** | ~30 POST/PUT with no GET to verify data persisted |
+| R4: Cross-page E2E flows | **GOOD** | Change password→re-login, old password rejected, restart survival |
+| R5: Encryption verification | **GOOD** | 5 encrypted payload checks, 4 raw passwords (API-only, acceptable) |
+| R6: Fresh state | **GOOD** | clearCookies + localStorage.clear in restart test |
+| R7: Error path ratio | **GOOD** | 61/190 = 32% (target ≥30%) |
 
-## CRUD Coverage
+## Remaining Gaps (Priority Order)
 
-| Entity | Create | Read | Update | Delete | Validation |
-|--------|--------|------|--------|--------|-----------|
-| Stock | No | Yes | No | No | Yes |
-| Holding | No | Yes | No | No | No |
-| Transaction | No | Yes | No | No | Yes |
-| MF Fund | No | Yes | No | No | No |
-| MF Holding | No | Yes | No | No | No |
-| MF Transaction | No | Yes | No | No | No |
-| Support Ticket | Yes | Yes | No | No | No |
-| FAQ | Yes | No | No | No | No |
-| Bug Report | No | No | No | No | No |
-| Signal | No | Yes | No | No | No |
+### Rule 1 Violations — Status-only tests to strengthen
 
-## User Flow Coverage
+These tests check HTTP status but never verify the outcome:
 
-| Flow | Tested | Gap |
-|------|--------|-----|
-| Login → Dashboard | Yes | — |
-| Logout → redirect | Yes | — |
-| Register → OTP → Login | API only | No UI flow test |
-| Forgot Password 3-step | Not tested | Critical gap |
-| Change password → Re-login | API only | No UI flow |
-| Profile update → Header reflects | Not tested | |
-| Groww config → Sync | Not tested | |
-| Submit ticket → AI response | Not tested | |
-| Admin approve bug → estimation | Not tested | |
-| Setup-admin API | Not tested | New endpoint |
+| Test | Current | Should Add |
+|------|---------|-----------|
+| Signals analyze → 200 | Status only | GET /signals/active after, verify count increased |
+| Admin FAQ create → 201 | Status only | GET /help/faq after, verify new FAQ appears |
+| Quotes refresh → 200 | Status only | GET /quotes after, verify data updated |
+| Performance snapshot → 200 | Status only | GET /performance/today after, verify snapshot |
+| Admin user status → 200 | Status only | GET /admin/users/{id} after, verify status changed |
+| Profile update → 200 | Checks response | Also re-GET /profile and verify |
+| Groww sync → 200 | Status only | GET /holdings after, verify count |
+| Ticket submit → 201 | Status only | GET /help/tickets after, verify ticket appears with AI response |
 
-## Form Validation Coverage
+### Rule 3 Violations — Mutations without verify-after
 
-| Form | Happy Path | Required Missing | Invalid Format | Error Display |
-|------|-----------|-----------------|----------------|--------------|
-| Login | Yes (API) | No | No | No |
-| Register | Partial (API) | Yes (API) | Partial | No |
-| Forgot Password | No | No | No | No |
-| Add Holding | No | No | No | No |
-| Edit Holding | No | No | No | No |
-| Add Transaction | No | No | No | No |
-| Add Stock | No | No | No | No |
-| Add MF Fund | No | No | No | No |
-| Add MF Transaction | No | No | No | No |
-| Change Password | Yes (API) | No | Yes (API) | No |
-| Groww Config | No | No | No | No |
-| Submit Ticket | Yes (API) | No | No | No |
-| Create Signal | No | No | No | No |
-| Admin Respond | No | No | No | No |
-| Profile Update | Yes (API) | No | No | No |
+| Mutation | Verify Missing |
+|----------|---------------|
+| POST /api/help/tickets | No GET to check ticket + AI classification |
+| POST /api/admin/faq | No GET to check FAQ created |
+| POST /api/performance/snapshot | No GET to check snapshot exists |
+| PUT /api/admin/users/{id}/status | No GET to verify status changed |
+| PUT /api/profile | Response checked but no re-GET |
+| PUT /api/profile/groww | Partial — has save+delete test but no re-GET verify |
+| POST /api/auth/register (validation) | Correct for error tests |
+| POST /api/auth/setup-admin | Has login-after verify — GOOD |
 
-## Security Coverage
+### Rule 2 Gaps — Forms without interactive tests
 
-| Check | Tested | Gap |
-|-------|--------|-----|
-| 401 without token (5 endpoints) | Yes | Expand to all |
-| 403 regular user on admin | Yes | — |
-| XSS in user input | No | Critical gap |
-| SQL injection in search | No | |
-| Multi-tenant data isolation | No | |
-| Setup-admin idempotency | No | |
-| Rate limiting on tickets | No | |
+| Page | Form Elements | Has Fill+Submit Test |
+|------|--------------|---------------------|
+| HoldingsPage | 6 | **No** — add modal fill+submit |
+| TransactionsPage | 8 | **No** — add modal fill+submit |
+| StocksPage | 7 | **No** — add search+select |
+| MutualFundsPage | 9 | **No** — add fund search+add |
+| SignalsPage | 9 | **No** — add create signal form |
+| RegisterPage | 9 | **No** — add full form fill with security Qs |
+| ForgotPasswordPage | 5 | **No** — add 3-step UI flow |
+| AdminTicketsPage | 3 | **No** — add respond textarea+submit |
+| ProfilePage | 8 | **Partial** — change password done, profile update + Groww not filled via UI |
+| LoginPage | 2 | **Yes** — full fill+submit+redirect |
+| HelpPage | 2 | **Yes** — ticket submit via UI |
 
-## Priority Test Additions
+## Test Quality Score
 
-### Critical (12 tests)
-
-1. Setup-admin: creates user, idempotent, reset password
-2. Forgot password API flow (3-step)
-3. XSS safe: HTML in ticket subject
-4. Multi-tenant: user can't see other user's data
-5. Bug report lifecycle: approve → estimate → fix
-
-### High (15 tests)
-
-6. Profile: update name form (UI fill + submit)
-7. Profile: change password form (UI fill + submit + re-login)
-8. Profile: Groww config form (UI fill + submit)
-9. Holdings: add holding form (UI fill + submit)
-10. Transactions: add transaction form (UI fill + submit)
-11. Stocks: add stock search + select (UI)
-12. MF: search fund + add holding (UI)
-13. Help: submit ticket form (UI fill + submit)
-14. Register: full form fill with security questions (UI)
-15. Admin tickets: respond form (UI)
-
-### Medium (10 tests)
-
-16. Holdings: search filter works
-17. Holdings: signal chip filter works
-18. Holdings: sort by column
-19. Stocks: signal/target filter chips
-20. Dashboard: Refresh Quotes button click
-21. Performance: Capture Snapshot button
-22. Help: FAQ accordion expand/collapse
-23. Admin tickets: filter tabs (All/Bugs/Inquiries)
-24. MF: sort columns
-25. Console error check on all pages
-
-### Low (5 tests)
-
-26. Long text in ticket subject (255+ chars)
-27. Special characters in stock search
-28. Decimal precision in holding quantity
-29. Empty state on Holdings page
-30. Rate limit on ticket submission
+| Category | Before (Jun 22) | After (Jun 23) | Target |
+|----------|-----------------|----------------|--------|
+| Total tests | 127 | 190 | — |
+| Form fills | 2 | 23 | 1 per form |
+| Network intercepts | 0 | 5 | All auth flows |
+| Cross-page E2E | 0 | 5 | All critical paths |
+| Fresh state tests | 0 | 2 | All auth flows |
+| Error path % | ~25% | 32% | ≥30% |
+| Status-only tests | ~80 | ~50 | 0 |
+| Verify-after mutations | 0 | ~10 | 100% |
 
 ## Audit History
 
-| Date | Tests Before | Tests After | Gaps Found | Gaps Fixed |
-|------|-------------|-------------|------------|------------|
-| 2026-06-23 | 127 | — | 42 | Pending |
+| Date | Tests | R1 | R2 | R3 | R4 | R5 | R6 | R7 |
+|------|-------|----|----|----|----|----|----|-----|
+| 2026-06-23 (v1) | 127 | LOW | LOW | LOW | NONE | NONE | NONE | LOW |
+| 2026-06-23 (v2) | 190 | LOW | MED | LOW | GOOD | GOOD | GOOD | GOOD |
