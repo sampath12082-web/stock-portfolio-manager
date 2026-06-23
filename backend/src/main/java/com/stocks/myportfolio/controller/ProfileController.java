@@ -30,7 +30,15 @@ public class ProfileController {
 
     private String decryptIfNeeded(String value) {
         if (value == null || value.isBlank()) return value;
-        try { return rsaKeyService.decrypt(value); } catch (Exception e) { return value; }
+        try {
+            return rsaKeyService.decrypt(value);
+        } catch (Exception e) {
+            if (value.length() > 100 && value.matches("[A-Za-z0-9+/=]+")) {
+                throw new com.stocks.myportfolio.common.exception.ValidationException(
+                        "Credential decryption failed. Please refresh the page and try again.");
+            }
+            return value;
+        }
     }
 
     @GetMapping

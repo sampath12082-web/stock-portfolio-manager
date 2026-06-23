@@ -48,6 +48,9 @@ public class AuthServiceImpl implements AuthService {
         try {
             return rsaKeyService.decrypt(value);
         } catch (Exception e) {
+            if (value.length() > 100 && value.matches("[A-Za-z0-9+/=]+")) {
+                throw new ValidationException("Password decryption failed. Please refresh the page and try again.");
+            }
             return value;
         }
     }
