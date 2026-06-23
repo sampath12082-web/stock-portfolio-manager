@@ -67,10 +67,23 @@ public class ProfileController {
     public Map<String, Object> getGrowwConfig(Principal principal) {
         User user = findUser(principal.getName());
         return growwConfigRepository.findByUser(user)
-                .map(c -> Map.<String, Object>of(
-                        "enabled", c.isEnabled(),
-                        "hasAccessToken", c.getAccessTokenEncrypted() != null,
-                        "hasApiSecret", c.getApiSecretEncrypted() != null))
+                .map(c -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("enabled", c.isEnabled());
+                    m.put("hasAccessToken", c.getAccessTokenEncrypted() != null && !c.getAccessTokenEncrypted().isBlank());
+                    m.put("hasApiSecret", c.getApiSecretEncrypted() != null && !c.getApiSecretEncrypted().isBlank());
+                    if (c.getAccessTokenEncrypted() != null && c.getAccessTokenEncrypted().length() > 10) {
+                        String t = c.getAccessTokenEncrypted();
+                        m.put("accessTokenPreview", t.substring(0, 6) + "..." + t.substring(t.length() - 4));
+                        m.put("accessTokenLength", t.length());
+                    }
+                    if (c.getApiSecretEncrypted() != null && c.getApiSecretEncrypted().length() > 10) {
+                        String s = c.getApiSecretEncrypted();
+                        m.put("apiSecretPreview", s.substring(0, 6) + "..." + s.substring(s.length() - 4));
+                        m.put("apiSecretLength", s.length());
+                    }
+                    return m;
+                })
                 .orElse(Map.of("enabled", false, "hasAccessToken", false, "hasApiSecret", false));
     }
 
