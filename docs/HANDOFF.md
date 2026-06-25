@@ -1,68 +1,91 @@
 # Session Handoff
 
-## Date: 2026-06-22
+## Date: 2026-06-23
 
 ## Current State
 
-App running at **http://localhost:8081**. Admin: `sampath12082@gmail.com` / `Admin@1234567890*`.
+App running at **http://localhost:8081** (local) and **https://stock-portfolio-manager-4rht.onrender.com** (Render).
 
-### Data
+### Data (local)
 | Entity | Count |
 |--------|-------|
 | Stocks | 129 |
 | Holdings | 129 (9 active) |
 | Transactions | 567 |
 | MF Holdings | 12 |
-| Users | 29 |
-| Active Signals | 1,790 |
+| Users | 29+ |
+| Active Signals | 1,790+ |
 
-### Migrations: V1–V24
-- V1-V14: Core domain (stocks, holdings, transactions, signals, MF, trade_type)
+### Migrations: V1-V24
+- V1-V14: Core domain
 - V15-V18: Users, OTP, user_id FK, admin seed
-- V19-V20: FAQ (14), support tickets
+- V19-V20: FAQ, support tickets
 - V21: Security questions
 - V22: Per-user Groww config
-- V23-V24: AI support agent (bug_report, ticket_activity, ticket classification fields)
+- V23-V24: AI support agent (bug_report, ticket_activity, ticket classification)
 
 ### Branding
-SoloSprint Trade — Sprint Orange (#D85A30), Plus Jakarta Sans + JetBrains Mono, cream background (#FAFAF8).
+SoloSprint Trade — Sprint Orange (#D85A30), Plus Jakarta Sans + JetBrains Mono.
 
-## Recent Changes (This Session)
-1. **AI Stock Search** — Chat-style page, dynamic prompts, Claude API + local fallback
-2. **SoloSprint Trade branding** — All 15 pages, sidebar, header, login/register/forgot
-3. **Holdings total row** — Footer sums qty, invested, current, realized/unrealized P&L
-4. **MF total row** — Footer sums units, invested, current, P&L, P&L%
-5. **MF sortable columns** — Holdings + transactions tables both sortable
-6. **Dashboard MF layout** — Col 1: Invested + Current | Col 2: Holdings + P&L
-7. **AI Support Ticket Agent** — Auto-classifies tickets, generates responses, runs Playwright tests for bugs, full bug lifecycle with admin approval
-8. **33 new E2E tests** — Signals, Help/FAQ, Quotes, Password Policy, Security Questions, Groww, Admin
-9. **8 new UI tests** — Performance, Admin Tickets, Register, Forgot Password, Login branding
-10. **Bug fixes** — Today's Orders filter, test password updates, strict selectors
+## Session Changes (Jun 22-23)
+
+### Features
+1. AI Stock Search — chat-style, Claude API + local fallback
+2. SoloSprint Trade branding — all 15 pages
+3. Holdings/MF total rows, MF sortable columns
+4. AI Support Ticket Agent — auto-classify, Playwright bug verification, bug lifecycle
+5. Groww per-user credentials — Profile page config with live validation
+6. Groww connection status — green/red dot on page load
+7. Setup-admin API — POST /api/auth/setup-admin (replaces AdminUserSeeder)
+
+### Security Fixes
+8. Multi-tenant findAll() eliminated — all services use findByUserId
+9. SecureRandom temp passwords (was predictable)
+10. RSA public key 5-min TTL cache (was cached forever, broke after restart)
+11. decryptIfEncrypted throws for corrupted ciphertext (was silent fallback)
+12. Sensitive logs moved to debug level
+13. Rate limiting on ticket submission (3 per 5 min)
+14. Shared ClaudeApiClient (removed duplicate code)
+
+### Deployment Fixes
+15. JWT key padding for short keys
+16. PostgreSQL prepareThreshold=0 for PgBouncer
+17. CORS configurable via property
+18. Prod config YAML structure fixed
+19. SpringDoc disabled in prod
+20. Hibernate dialect warning removed
 
 ## Test Results
-- **124 tests** across 5 suites (smoke:10, auth:17, functional:56, regression:13, ui-rendering:28)
-- 121 passed in last run, 3 flaky (token expiry in long runs)
+- **190 tests** across 6 suites
+- auth: 20, functional: 78, regression: 22, smoke: 10, ui-rendering: 56, e2e-change-password: 4
+- 189 passing, 1 Groww flaky
+
+### Test Quality (7 rules)
+- R1 Outcome vs status: LOW (50 status-only)
+- R2 Form fill+submit: MEDIUM
+- R3 Mutation verify-after: LOW (30 without verify)
+- R4 Cross-page E2E: GOOD
+- R5 Encryption: GOOD
+- R6 Fresh state: GOOD
+- R7 Error paths: GOOD (32%)
 
 ## Open Bugs: 0
 ## Open Enhancements: 0
 
-## Known Issues
-- **AI Search page** needs redesign (not tested, skipped intentionally)
-- **Playwright test runner** — `e2e.test-dir` may need absolute path if `../e2e` doesn't resolve
-- **3 DELETE endpoints** untested — intentionally skipped to avoid data loss
+## Pending Work
+See `docs/PENDING-WORK.md` — 9 items (test quality, docs, prod config).
 
 ## Environment
 ```
 DB_PASSWORD=<set in env>
 DB_USER=sampat
-GROWW_API_ENABLED=true
-ANTHROPIC_API_KEY=<optional, enables Claude AI for ticket agent + stock search>
+GROWW_API_ENABLED=true (default)
+ANTHROPIC_API_KEY=<optional>
 ```
 
-## Key Files Modified This Session
-- `backend/.../service/AiTicketAgentService.java` — AI ticket classification + response
-- `backend/.../service/BugLifecycleService.java` — Bug approve/reject/fix lifecycle
-- `backend/.../service/PlaywrightTestRunnerService.java` — ProcessBuilder test execution
-- `frontend/src/pages/HelpPage.tsx` — AI responses, bug progress, auto-refresh
-- `frontend/src/pages/AdminTicketsPage.tsx` — Filter tabs, bug management, lifecycle buttons
-- `frontend/src/components/brand/Logo.tsx` — SoloSprint Trade logo component
+## Key Commands
+```bash
+.\scripts\start.ps1   # Start locally
+.\scripts\stop.ps1    # Stop
+cd e2e && npm test     # Run all 190 tests
+```

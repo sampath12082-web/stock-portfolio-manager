@@ -207,12 +207,15 @@ test.describe('Functional — Admin API', () => {
     expect(user.email).toBe('sampath12082@gmail.com');
   });
 
-  test('admin can update user status', async ({ request }) => {
+  test('admin can update user status and verify', async ({ request }) => {
     const resp = await request.put('/api/admin/users/1/status', {
       headers: adminHeaders,
       data: { status: 'ACTIVE' },
     });
     expect(resp.status()).toBe(200);
+
+    const user = await (await request.get('/api/admin/users/1', { headers: adminHeaders })).json();
+    expect(user.status).toBe('ACTIVE');
   });
 });
 
@@ -231,15 +234,17 @@ test.describe('Functional — Profile API', () => {
     expect(profile.emailVerified).toBe(true);
   });
 
-  test('profile update preserves email', async ({ request }) => {
+  test('profile update persists and verifiable on re-read', async ({ request }) => {
     const resp = await request.put('/api/profile', {
       headers,
-      data: { firstName: 'Sampat Kumar' },
+      data: { firstName: 'Sampat Kumar', phone: '9876543210' },
     });
     expect(resp.status()).toBe(200);
-    const profile = await resp.json();
+
+    const profile = await (await request.get('/api/profile', { headers })).json();
     expect(profile.email).toBe('sampath12082@gmail.com');
     expect(profile.firstName).toBe('Sampat Kumar');
+    expect(profile.phone).toBe('9876543210');
   });
 
   test('groww config endpoint accessible', async ({ request }) => {
@@ -328,12 +333,18 @@ test.describe('Functional — Help & FAQ API', () => {
     }
   });
 
-  test('user can submit a support ticket', async ({ request }) => {
+  test('user can submit a support ticket and verify it persists', async ({ request }) => {
+    const subject = 'Verify Test ' + Date.now();
     const resp = await request.post('/api/help/tickets', {
       headers,
-      data: { subject: 'Test Ticket', message: 'Automated test ticket' },
+      data: { subject, message: 'Automated test ticket' },
     });
     expect([200, 201]).toContain(resp.status());
+
+    const tickets = await (await request.get('/api/help/tickets', { headers })).json();
+    const found = tickets.find((t: { subject: string }) => t.subject === subject);
+    expect(found).toBeTruthy();
+    expect(found.status).toBeDefined();
   });
 
   test('user can list their tickets', async ({ request }) => {
@@ -350,12 +361,18 @@ test.describe('Functional — Help & FAQ API', () => {
     expect(Array.isArray(tickets)).toBe(true);
   });
 
-  test('admin FAQ create endpoint accessible', async ({ request }) => {
+  test('admin FAQ create and verify persisted', async ({ request }) => {
+    const question = 'Test FAQ ' + Date.now() + '?';
     const resp = await request.post('/api/admin/faq', {
       headers,
-      data: { question: 'Test Q?', answer: 'Test A', category: 'General' },
+      data: { question, answer: 'Test answer', category: 'General' },
     });
     expect([200, 201]).toContain(resp.status());
+
+    const faqs = await (await request.get('/api/help/faq', { headers })).json();
+    const found = faqs.find((f: { question: string }) => f.question === question);
+    expect(found).toBeTruthy();
+    expect(found.answer).toBe('Test answer');
   });
 });
 
