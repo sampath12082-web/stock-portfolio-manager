@@ -1,33 +1,68 @@
 # Pending Work
 
-## Date: 2026-06-23 (updated)
+## Date: 2026-06-27
 
-## Completed This Session
+## Consolidated from all 5 skill audits (Run 3)
 
-| # | Item | Status |
-|---|------|--------|
-| 1 | Rule 1: Status-only tests | PARTIAL — 4 key mutations strengthened with verify-after |
-| 2 | Rule 3: Mutations without verify | PARTIAL — ticket, FAQ, profile, admin status now verify |
-| 5 | SpringDoc exposed in prod | DONE — disabled in application-prod.yml |
-| 6 | Hibernate dialect warning | DONE — removed explicit dialect |
-| 7 | HANDOFF.md update | DONE — full rewrite |
-| 8 | CLAUDE.md test count | DONE — updated to 190 |
+### High Priority — Test Quality
 
-## Still Pending
+| # | Item | Source | Detail |
+|---|------|--------|--------|
+| 1 | R3: Verify-after for mutations | Test Audit | ~32 POST/PUT in functional.spec.ts never GET back to confirm data persisted |
+| 2 | R1: Status-only assertions | Test Audit | ~26 tests only check HTTP status, no outcome verification |
+| 3 | R5: Encryption checks | Test Audit | Only 4 tests verify RSA payload; auth.spec.ts has zero |
+| 4 | R6: Fresh state tests | Test Audit | Only 2 tests clear cookies/localStorage; no session isolation in main suites |
 
-| # | Priority | Item | Detail |
-|---|----------|------|--------|
-| 1 | Medium | Rule 1: More status-only tests | ~46 remaining in functional.spec.ts |
-| 2 | Medium | Rule 3: More mutations | ~26 remaining POST/PUT without verify |
-| 3 | Medium | Rule 2: Forms without fill+submit | 9 pages: Holdings, Transactions, Stocks, MF, Signals, Register, ForgotPassword, AdminTickets, Profile update |
-| 4 | Info | Groww token expires daily | IP-bound — works locally, needs IP whitelisting for Render |
-| 9 | Low | AI Search page redesign | Skipped in all audits |
+### Medium Priority — Features & Security
+
+| # | Item | Source | Detail |
+|---|------|--------|--------|
+| 5 | IP-based brute-force lockout | App Critique | Rate limiter uses email key for login; add IP-based lockout after 10 failed attempts across all emails |
+| 6 | AI Search page redesign | All audits | Skipped in every audit. Needs UX rethink — current chat UI functional but basic |
+| 7 | Watchlist / alerts feature | App Critique | No watchlist or price alert system. Would complete the trading lifecycle |
+
+### Medium Priority — Documentation
+
+| # | Item | Source | Detail |
+|---|------|--------|--------|
+| 8 | Update all stale docs | Doc Audit | HANDOFF.md, TEST-COVERAGE-AUDIT.md, SKILL-AUDIT-RESULTS.md need test count 237, date refresh |
+| 9 | Document setup-admin endpoint | Doc Audit | POST /api/auth/setup-admin missing from api-reference.md |
+| 10 | Document CORS override for prod | Project Review | How to set cors.allowed-origins env var on Render |
+
+### Low Priority — Polish
+
+| # | Item | Source | Detail |
+|---|------|--------|--------|
+| 11 | R2: SignalsPage form test | Test Audit | Create/edit signal form has no fill+submit UI test |
+| 12 | Backend unit tests for remaining services | App Critique | StockService, HoldingService, PortfolioService, PerformanceService, MfService still untested |
+| 13 | Docker containerization | App Critique | No Dockerfile — would help local dev consistency and CI |
+| 14 | Groww IP whitelisting | Info | Works locally; Render needs static IP (paid plan) or Groww IP whitelist |
+
+## Already Completed (from audit action items)
+
+| # | Item | Date |
+|---|------|------|
+| ✅ | Connection pool leak fix | Jun 27 |
+| ✅ | Backend unit tests (40 total) | Jun 27 |
+| ✅ | Global rate limiting (login/register) | Jun 27 |
+| ✅ | Test credentials externalized | Jun 27 |
+| ✅ | Mobile bottom navigation | Jun 27 |
+| ✅ | Dark mode (system + toggle) | Jun 27 |
+| ✅ | CI/CD pipeline (GitHub Actions) | Jun 27 |
+| ✅ | Code splitting (React.lazy) | Jun 27 |
+| ✅ | CORS headers restricted | Jun 27 |
+| ✅ | @Autowired → Optional constructor | Jun 27 |
+| ✅ | SpringDoc disabled in prod | Jun 23 |
+| ✅ | Hibernate dialect removed | Jun 23 |
+| ✅ | CLAUDE.md GROWW default fixed | Jun 27 |
 
 ## Current Stats
 
-- **Tests:** 197 total, 181+ passing
+- **Tests:** 197 E2E + 40 backend = 237 total
+- **Backend unit test classes:** 8 (MyportfolioApp, JWT, Password, RSA, AI, Dashboard, Transaction, Playwright)
 - **Open Bugs:** 0
 - **Open Enhancements:** 0
+- **App Score:** 88/100
 - **Git:** Clean, all pushed
-- **Migrations:** V1-V24
+- **Migrations:** V1–V24
 - **Render:** Live at https://stock-portfolio-manager-4rht.onrender.com
