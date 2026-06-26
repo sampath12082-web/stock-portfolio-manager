@@ -56,7 +56,7 @@ SoloSprint Trade — Sprint Orange (#D85A30), Plus Jakarta Sans + JetBrains Mono
 20. Hibernate dialect warning removed
 
 ## Test Results
-- **190 tests** across 6 suites
+- **197 tests** across 7 suites
 - auth: 20, functional: 78, regression: 22, smoke: 10, ui-rendering: 56, e2e-change-password: 4
 - 189 passing, 1 Groww flaky
 
@@ -87,5 +87,5 @@ ANTHROPIC_API_KEY=<optional>
 ```bash
 .\scripts\start.ps1   # Start locally
 .\scripts\stop.ps1    # Stop
-cd e2e && npm test     # Run all 190 tests
+cd e2e && npm test     # Run all 197 tests
 ```

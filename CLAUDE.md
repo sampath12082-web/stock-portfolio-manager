@@ -25,7 +25,7 @@ cd frontend && npm run build
 # Frontend — lint
 cd frontend && npm run lint
 
-# E2E tests — 190 tests across 6 suites (requires backend running on port 8081)
+# E2E tests — 197 tests across 7 suites (requires backend running on port 8081)
 cd e2e && npm test                    # All tests
 cd e2e && npm run test:smoke          # Smoke tests (10)
 cd e2e && npm run test:auth           # Auth tests (17)

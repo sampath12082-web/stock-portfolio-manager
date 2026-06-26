@@ -25,7 +25,7 @@
 
 ## Current Stats
 
-- **Tests:** 190 total, 181+ passing
+- **Tests:** 197 total, 181+ passing
 - **Open Bugs:** 0
 - **Open Enhancements:** 0
 - **Git:** Clean, all pushed

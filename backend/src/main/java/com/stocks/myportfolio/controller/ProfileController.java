@@ -3,8 +3,8 @@ package com.stocks.myportfolio.controller;
 import java.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.stocks.myportfolio.common.exception.ResourceNotFoundException;
@@ -23,15 +23,14 @@ public class ProfileController {
     private final UserRepository userRepository;
     private final UserGrowwConfigRepository growwConfigRepository;
     private final RsaKeyService rsaKeyService;
-
-    @Autowired(required = false)
-    private GrowwClient growwClient;
+    private final GrowwClient growwClient;
 
     public ProfileController(UserRepository userRepository, UserGrowwConfigRepository growwConfigRepository,
-            RsaKeyService rsaKeyService) {
+            RsaKeyService rsaKeyService, Optional<GrowwClient> growwClient) {
         this.userRepository = userRepository;
         this.growwConfigRepository = growwConfigRepository;
         this.rsaKeyService = rsaKeyService;
+        this.growwClient = growwClient.orElse(null);
     }
 
     private String decryptIfNeeded(String value) {
