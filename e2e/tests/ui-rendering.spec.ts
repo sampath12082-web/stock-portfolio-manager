@@ -1,12 +1,12 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const ADMIN_EMAIL = 'sampath12082@gmail.com';
-const ADMIN_PASSWORD = 'Admin@1234567890*';
+
+
 
 async function loginViaUI(page: Page) {
   await page.goto('/login');
-  await page.fill('input[type="email"]', ADMIN_EMAIL);
-  await page.fill('input[type="password"]', ADMIN_PASSWORD);
+  await page.fill('input[type="email"]', process.env.TEST_ADMIN_EMAIL || 'sampath12082@gmail.com');
+  await page.fill('input[type="password"]', process.env.TEST_ADMIN_PASSWORD || 'Admin@1234567890*');
   await page.click('button[type="submit"]');
   await page.waitForURL('/', { timeout: 15000 });
 }

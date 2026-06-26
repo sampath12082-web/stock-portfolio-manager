@@ -11,6 +11,7 @@ import com.stocks.myportfolio.dto.response.auth.AuthResponse;
 import com.stocks.myportfolio.dto.response.auth.UserResponse;
 import com.stocks.myportfolio.entity.User;
 import com.stocks.myportfolio.repository.UserRepository;
+import com.stocks.myportfolio.security.RateLimiter;
 import com.stocks.myportfolio.service.AuthService;
 import com.stocks.myportfolio.service.RsaKeyService;
 import com.stocks.myportfolio.service.impl.AuthServiceImpl;
@@ -27,14 +28,16 @@ public class AuthController {
     private final RsaKeyService rsaKeyService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RateLimiter rateLimiter;
 
     public AuthController(AuthService authService, AuthServiceImpl authServiceImpl, RsaKeyService rsaKeyService,
-            UserRepository userRepository, PasswordEncoder passwordEncoder) {
+            UserRepository userRepository, PasswordEncoder passwordEncoder, RateLimiter rateLimiter) {
         this.authService = authService;
         this.authServiceImpl = authServiceImpl;
         this.rsaKeyService = rsaKeyService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.rateLimiter = rateLimiter;
     }
 
     @GetMapping("/public-key")
@@ -44,13 +47,23 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse register(@Valid @RequestBody RegisterRequest request) {
+    public UserResponse register(@Valid @RequestBody RegisterRequest request, jakarta.servlet.http.HttpServletRequest httpReq) {
+        String key = "register:" + httpReq.getRemoteAddr();
+        if (!rateLimiter.isAllowed(key, 3, 600000)) {
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many registration attempts. Try again in 10 minutes.");
+        }
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-        return authService.login(request);
+    public AuthResponse login(@Valid @RequestBody LoginRequest request, jakarta.servlet.http.HttpServletRequest httpReq) {
+        String key = "login:" + request.email();
+        if (!rateLimiter.isAllowed(key, 5, 300000)) {
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many login attempts. Try again in 5 minutes.");
+        }
+        AuthResponse response = authService.login(request);
+        rateLimiter.reset(key);
+        return response;
     }
 
     @PostMapping("/verify-otp")

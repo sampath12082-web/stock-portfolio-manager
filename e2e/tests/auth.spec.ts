@@ -1,8 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 const BASE = 'http://localhost:8081';
-const ADMIN_EMAIL = 'sampath12082@gmail.com';
-const ADMIN_PASSWORD = 'Admin@1234567890*';
+import { ADMIN_EMAIL, ADMIN_PASSWORD } from './helpers';
 
 test.describe('Auth — Smoke Tests', () => {
   test('auth endpoints are publicly accessible (not 401/403)', async ({ request }) => {

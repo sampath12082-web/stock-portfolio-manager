@@ -1,7 +1,7 @@
 import { APIRequestContext } from '@playwright/test';
 
-const ADMIN_EMAIL = 'sampath12082@gmail.com';
-const ADMIN_PASSWORD = 'Admin@1234567890*';
+export const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'sampath12082@gmail.com';
+export const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'Admin@1234567890*';
 
 export async function getAdminToken(request: APIRequestContext): Promise<string> {
   const resp = await request.post('/api/auth/login', {
