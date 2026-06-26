@@ -7,6 +7,10 @@ body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
+.dark body, html.dark body {
+  @apply bg-[#1a1a1a] text-[#E5E5E3];
+}
+
 #root {
   min-height: 100vh;
 }
@@ -19,4 +23,28 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   @apply bg-[#D3D1C7] rounded;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+/* Dark mode overrides */
+.dark .bg-white { background-color: #242424 !important; }
+.dark .bg-gray-50, .dark .bg-\[\#FAFAF8\] { background-color: #1a1a1a !important; }
+.dark .bg-\[\#F1EFE8\] { background-color: #2a2a2a !important; }
+.dark .border-gray-200, .dark .border-gray-100, .dark .border-\[\#D3D1C7\] { border-color: #333 !important; }
+.dark .text-gray-900, .dark .text-\[\#2C2C2A\] { color: #E5E5E3 !important; }
+.dark .text-gray-700 { color: #C0C0BE !important; }
+.dark .text-gray-600, .dark .text-\[\#444441\] { color: #A0A09E !important; }
+.dark .text-gray-500 { color: #888880 !important; }
+.dark .text-gray-400, .dark .text-\[\#888780\] { color: #666660 !important; }
+.dark .bg-gray-100 { background-color: #2a2a2a !important; }
+.dark input, .dark select, .dark textarea {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #E5E5E3 !important;
 }

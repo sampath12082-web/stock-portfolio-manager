@@ -1,0 +1,1 @@
+import{n as e}from"./axios-eCGEeu0B.js";import{o as t}from"./format-kkUbxFgh.js";var n=e();function r({value:e,format:r}){if(e==null)return(0,n.jsx)(`span`,{className:`text-gray-400`,children:`—`});let i=r?r(e):`${e>=0?`+`:``}${e.toFixed(2)}`;return(0,n.jsx)(`span`,{className:t(e),children:i})}export{r as t};

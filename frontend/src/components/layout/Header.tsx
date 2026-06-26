@@ -1,7 +1,8 @@
-import { Menu, RefreshCw, LogOut, User } from 'lucide-react';
+import { Menu, RefreshCw, LogOut, User, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useRefreshQuotes } from '@/hooks/useQuotes';
 import { useAuth } from '@/auth/AuthContext';
+import { useDarkMode } from '@/hooks/useDarkMode';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -11,6 +12,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const refreshMutation = useRefreshQuotes();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isDark, toggle } = useDarkMode();
 
   function handleLogout() {
     logout();
@@ -30,7 +32,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
           className="flex items-center gap-2 px-3 py-1.5 text-sm bg-[#F1EFE8] hover:bg-[#E8E5DB] border border-[#D3D1C7] rounded-md transition-colors disabled:opacity-50"
         >
           <RefreshCw size={14} className={refreshMutation.isPending ? 'animate-spin' : ''} />
-          Refresh Quotes
+          <span className="hidden sm:inline">Refresh Quotes</span>
+        </button>
+        <button onClick={toggle} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="p-1.5 text-[#888780] hover:text-[#2C2C2A] hover:bg-[#F1EFE8] rounded-md transition-colors">
+          {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#444441] hover:text-[#2C2C2A] hover:bg-[#F1EFE8] rounded-md">
           <User size={14} />
