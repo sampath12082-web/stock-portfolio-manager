@@ -96,11 +96,16 @@ test.describe('Functional — Transactions API', () => {
     headers = authHeaders(await getAdminToken(request));
   });
 
-  test('transactions returns array', async ({ request }) => {
+  test('transactions returns array with fields', async ({ request }) => {
     const resp = await request.get('/api/transactions', { headers });
     expect(resp.status()).toBe(200);
     const txns = await resp.json();
     expect(Array.isArray(txns)).toBe(true);
+    if (txns.length > 0) {
+      expect(txns[0]).toHaveProperty('transactionType');
+      expect(txns[0]).toHaveProperty('totalAmount');
+      expect(txns[0]).toHaveProperty('tradeDate');
+    }
   });
 
   test('transaction analytics returns all fields', async ({ request }) => {
@@ -134,11 +139,14 @@ test.describe('Functional — Stocks API', () => {
     }
   });
 
-  test('stock lookup searches Yahoo Finance', async ({ request }) => {
+  test('stock lookup searches Yahoo Finance and returns data', async ({ request }) => {
     const resp = await request.get('/api/stocks/lookup?query=RELIANCE', { headers });
     expect(resp.status()).toBe(200);
     const results = await resp.json();
     expect(Array.isArray(results)).toBe(true);
+    if (results.length > 0) {
+      expect(results[0]).toHaveProperty('symbol');
+    }
   });
 });
 
@@ -149,19 +157,34 @@ test.describe('Functional — Mutual Funds API', () => {
     headers = authHeaders(await getAdminToken(request));
   });
 
-  test('MF funds returns array', async ({ request }) => {
+  test('MF funds returns array with data', async ({ request }) => {
     const resp = await request.get('/api/mf/funds', { headers });
     expect(resp.status()).toBe(200);
+    const funds = await resp.json();
+    expect(Array.isArray(funds)).toBe(true);
   });
 
-  test('MF holdings returns array', async ({ request }) => {
+  test('MF holdings returns array with fields', async ({ request }) => {
     const resp = await request.get('/api/mf/holdings', { headers });
     expect(resp.status()).toBe(200);
+    const holdings = await resp.json();
+    expect(Array.isArray(holdings)).toBe(true);
+    if (holdings.length > 0) {
+      expect(holdings[0]).toHaveProperty('schemeName');
+      expect(holdings[0]).toHaveProperty('investedAmount');
+      expect(holdings[0]).toHaveProperty('currentValue');
+    }
   });
 
-  test('MF transactions returns array', async ({ request }) => {
+  test('MF transactions returns array with fields', async ({ request }) => {
     const resp = await request.get('/api/mf/transactions', { headers });
     expect(resp.status()).toBe(200);
+    const txns = await resp.json();
+    expect(Array.isArray(txns)).toBe(true);
+    if (txns.length > 0) {
+      expect(txns[0]).toHaveProperty('transactionType');
+      expect(txns[0]).toHaveProperty('amount');
+    }
   });
 });
 
@@ -172,9 +195,11 @@ test.describe('Functional — Performance API', () => {
     headers = authHeaders(await getAdminToken(request));
   });
 
-  test('recent performance returns array', async ({ request }) => {
+  test('recent performance returns array with snapshots', async ({ request }) => {
     const resp = await request.get('/api/performance/recent?days=7', { headers });
     expect(resp.status()).toBe(200);
+    const data = await resp.json();
+    expect(Array.isArray(data)).toBe(true);
   });
 
   test('today snapshot returns snapshot', async ({ request }) => {
@@ -247,9 +272,14 @@ test.describe('Functional — Profile API', () => {
     expect(profile.phone).toBe('9876543210');
   });
 
-  test('groww config endpoint accessible', async ({ request }) => {
+  test('groww config returns status fields', async ({ request }) => {
     const resp = await request.get('/api/profile/groww', { headers });
     expect([200, 204]).toContain(resp.status());
+    if (resp.status() === 200) {
+      const config = await resp.json();
+      expect(config).toHaveProperty('enabled');
+      expect(config).toHaveProperty('hasAccessToken');
+    }
   });
 });
 

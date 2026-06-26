@@ -57,12 +57,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public AuthResponse login(@Valid @RequestBody LoginRequest request, jakarta.servlet.http.HttpServletRequest httpReq) {
-        String key = "login:" + request.email();
-        if (!rateLimiter.isAllowed(key, 5, 300000)) {
-            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many login attempts. Try again in 5 minutes.");
+        String emailKey = "login:" + request.email();
+        String ipKey = "login-ip:" + httpReq.getRemoteAddr();
+        if (!rateLimiter.isAllowed(emailKey, 5, 300000)) {
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many login attempts for this account. Try again in 5 minutes.");
+        }
+        if (!rateLimiter.isAllowed(ipKey, 10, 600000)) {
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many login attempts from this IP. Try again in 10 minutes.");
         }
         AuthResponse response = authService.login(request);
-        rateLimiter.reset(key);
+        rateLimiter.reset(emailKey);
+        rateLimiter.reset(ipKey);
         return response;
     }
 

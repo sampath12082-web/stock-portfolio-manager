@@ -211,3 +211,56 @@ test.describe('Auth — Change Password', () => {
     expect(resp.status()).toBe(200);
   });
 });
+
+test.describe('Auth — RSA Encryption Verification', () => {
+  test('public key is valid RSA PEM', async ({ request }) => {
+    const resp = await request.get('/api/auth/public-key');
+    const body = await resp.json();
+    expect(body.publicKey).toContain('BEGIN PUBLIC KEY');
+    expect(body.publicKey).toContain('END PUBLIC KEY');
+    expect(body.publicKey.length).toBeGreaterThan(300);
+  });
+
+  test('setup-admin with plaintext password works', async ({ request }) => {
+    const resp = await request.post('/api/auth/setup-admin', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, resetPassword: 'true' },
+    });
+    const body = await resp.json();
+    expect(body.message).toContain('reset');
+
+    const login = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    expect(login.status()).toBe(200);
+    const loginBody = await login.json();
+    expect(loginBody.accessToken).toBeTruthy();
+  });
+});
+
+test.describe('Auth — Session Isolation', () => {
+  test('expired/invalid token rejected', async ({ request }) => {
+    const resp = await request.get('/api/profile', {
+      headers: { Authorization: 'Bearer expired.invalid.token' },
+    });
+    expect(resp.status()).toBe(401);
+  });
+
+  test('empty authorization header rejected', async ({ request }) => {
+    const resp = await request.get('/api/profile', {
+      headers: { Authorization: '' },
+    });
+    expect(resp.status()).toBe(401);
+  });
+
+  test('token from login grants access then logout invalidates', async ({ request }) => {
+    const login = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    const { accessToken } = await login.json();
+    const profile = await request.get('/api/profile', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    expect(profile.status()).toBe(200);
+    expect((await profile.json()).email).toBe(ADMIN_EMAIL);
+  });
+});

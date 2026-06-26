@@ -20,6 +20,7 @@ Pass token as: `Authorization: Bearer <accessToken>`
 | POST | `/api/auth/reset-password` | Verify OTP + set new password |
 | POST | `/api/auth/change-password` | Change password (requires current password) |
 | POST | `/api/auth/refresh` | Refresh access token using refresh token |
+| POST | `/api/auth/setup-admin` | Create admin user (idempotent). Body: `{email, password, firstName?, lastName?, resetPassword?}` |
 
 ## Profile APIs (Authenticated)
 
