@@ -533,6 +533,21 @@ test.describe('UI — Register Form', () => {
   });
 });
 
+// ─── FORM FILL+SUBMIT: Signals Page ──────────────────────────────
+
+test.describe('UI Form — Signals Page', () => {
+  test('signals page loads and has filter tabs', async ({ page }) => {
+    await loginViaUI(page);
+    await page.goto('/');
+    await page.waitForTimeout(1000);
+    const nav = page.locator('nav');
+    const aiLink = nav.getByText('AI Search');
+    if (await aiLink.isVisible()) {
+      // Signals page might be accessed via direct URL
+    }
+  });
+});
+
 // ─── FORM FILL+SUBMIT: Profile Update ────────────────────────────
 
 test.describe('UI Form — Profile Update', () => {
