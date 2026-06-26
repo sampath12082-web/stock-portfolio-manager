@@ -64,7 +64,6 @@ public class TechnicalAnalysisServiceImpl implements TechnicalAnalysisService {
     }
 
     @Override
-    @Transactional
     public List<TradingSignalResponse> analyzeHoldings() {
         List<Holding> holdings = holdingRepository.findByUserId(currentUser.getUserId());
         List<TradingSignalResponse> results = new ArrayList<>();
@@ -79,7 +78,7 @@ public class TechnicalAnalysisServiceImpl implements TechnicalAnalysisService {
 
                 AnalysisResult analysis = analyze(history);
                 TradingSignal signal = createSignal(stock, analysis);
-                signalRepository.save(signal);
+                saveSignal(signal);
                 results.add(toResponse(signal));
             } catch (Exception e) {
                 log.warn("Analysis failed for {}: {}", holding.getStock().getSymbol(), e.getMessage());
@@ -89,8 +88,11 @@ public class TechnicalAnalysisServiceImpl implements TechnicalAnalysisService {
         return results;
     }
 
+    private void saveSignal(TradingSignal signal) {
+        signalRepository.save(signal);
+    }
+
     @Override
-    @Transactional
     public List<TradingSignalResponse> scanMarket() {
         List<TradingSignalResponse> results = new ArrayList<>();
 
@@ -109,7 +111,7 @@ public class TechnicalAnalysisServiceImpl implements TechnicalAnalysisService {
                 AnalysisResult analysis = analyze(history);
                 TradingSignal signal = createSignal(stock, analysis);
                 signal.setNotes("Portfolio stock. " + (signal.getNotes() != null ? signal.getNotes() : ""));
-                signalRepository.save(signal);
+                saveSignal(signal);
                 results.add(toResponse(signal));
             } catch (Exception e) {
                 log.warn("Portfolio analysis failed for {}: {}", holding.getStock().getSymbol(), e.getMessage());
@@ -159,7 +161,6 @@ public class TechnicalAnalysisServiceImpl implements TechnicalAnalysisService {
     }
 
     @Override
-    @Transactional
     public void runDailyAnalysis() {
         log.info("Running daily technical analysis");
         analyzeHoldings();

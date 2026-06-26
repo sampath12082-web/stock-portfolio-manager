@@ -28,10 +28,10 @@ cd frontend && npm run lint
 # E2E tests — 197 tests across 7 suites (requires backend running on port 8081)
 cd e2e && npm test                    # All tests
 cd e2e && npm run test:smoke          # Smoke tests (10)
-cd e2e && npm run test:auth           # Auth tests (17)
-cd e2e && npm run test:functional     # Functional tests (56)
-cd e2e && npm run test:regression     # Regression tests (13)
-cd e2e && npm run test:ui             # UI rendering tests (28)
+cd e2e && npm run test:auth           # Auth tests (20)
+cd e2e && npm run test:functional     # Functional tests (78)
+cd e2e && npm run test:regression     # Regression tests (22)
+cd e2e && npm run test:ui             # UI rendering tests (63)
 cd e2e && npm run test:headed         # Run with browser visible
 cd e2e && npx playwright test tests/smoke.spec.ts --grep "test name"  # single test
 
@@ -48,7 +48,7 @@ The backend runs on **port 8081**. The frontend dev server runs on **port 3000**
 | `DB_PASSWORD` | Yes | — | PostgreSQL password |
 | `DB_USER` | No | `sampat` | PostgreSQL username |
 | `DB_HOST` | No | `localhost` | PostgreSQL host |
-| `GROWW_API_ENABLED` | No | `false` | Enable Groww portfolio sync |
+| `GROWW_API_ENABLED | No | true` | Enable Groww portfolio sync |
 | `GROWW_ACCESS_TOKEN` | If Groww enabled | — | Groww API key (JWT) |
 | `GROWW_API_SECRET` | If Groww enabled | — | Groww API secret for checksum auth |
 | `ANTHROPIC_API_KEY` | No | — | Claude API key for AI Stock Assistant (optional) |

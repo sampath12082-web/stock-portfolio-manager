@@ -3,6 +3,11 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:myportfolio}
     username: ${DB_USER:sampat}
     password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
 
   jpa:
     hibernate:
