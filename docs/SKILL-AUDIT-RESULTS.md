@@ -1,6 +1,6 @@
 # Skill Audit Results
 
-## Date: 2026-06-27 (Run 3)
+## Date: 2026-06-27 (Run 4)
 
 All 5 skills executed in parallel via subagents.
 
@@ -8,81 +8,89 @@ All 5 skills executed in parallel via subagents.
 
 ## 1. Project Review
 
-**Verdict: 0 Critical, 1 Warning, 1 Suggestion**
+**Verdict: 0 Critical, 2 Warnings, 1 Suggestion**
 
-### Passed (7/10)
-- Backend compile: Clean
-- Frontend build: Clean (code-split chunks)
+### Passed (8/10)
+- Backend compile + frontend build: Clean
 - No console.log, no @Autowired, no sensitive logs
 - Multi-tenancy: Zero findAll() without user filter
 - Constructor injection: Consistent throughout
-- Auth config: Correct layering
-- CORS: Externalized, headers restricted
+- Auth config: Correct layering (auth public, admin ROLE_ADMIN, api authenticated)
+- CORS: Externalized, headers restricted to Authorization/Content-Type/X-Requested-With
+- Rate limiting on login (email+IP) and register (IP)
 
-### Warning
-1. **E2E test credentials** — hardcoded `Admin@1234567890*` in 4 test files. Should use env vars.
+### Warnings
+1. **Rate limiting gaps** — `/verify-otp`, `/forgot-password`, `/verify-security`, `/reset-password`, `/setup-admin` lack rate limiting. OTP brute-force and email enumeration risk.
+2. **`/setup-admin` publicly accessible** — under `/api/auth/**` permitAll. Consider restricting to first-run or removing.
 
 ### Suggestion
-- Document CORS override for production deployment.
+- Add `@Transactional(readOnly = true)` to read-only admin queries.
 
 ---
 
 ## 2. Functionality Review
 
-**Verdict: CRITICAL BUG FOUND — DB connection pool exhaustion**
+**Verdict: All 12 endpoints OK, 15/15 pages match, API docs complete**
 
-### Bug: Connection Pool Leak
-- **Root cause**: `PortfolioScheduler` technical analysis job leaves DB transactions uncommitted on error, exhausting HikariCP pool (max 5 connections).
-- **Impact**: All API endpoints return 500 after the scheduled job runs.
-- **Fix needed**: Add proper `@Transactional` error handling in `TechnicalAnalysisServiceImpl`.
+| Endpoint | Status | Data |
+|----------|--------|------|
+| /api/dashboard | 200 | invested 4.69L, current 4.31L |
+| /api/holdings | 200 | 129 holdings |
+| /api/stocks | 200 | 129 stocks |
+| /api/transactions | 200 | 567 transactions |
+| /api/transactions/analytics | 200 | 331 buy, 215 sell |
+| /api/mf/holdings | 200 | 12 MF holdings |
+| /api/performance/today | 200 | snapshot 2026-06-27 |
+| /api/signals/active | 200 | 4,067 signals |
+| /api/help/faq | 200 | 14 FAQs |
+| /api/profile | 200 | Admin, ACTIVE |
+| /api/admin/users | 200 | 3 users |
+| /api/profile/groww | 200 | Not connected |
 
-### Pages: 15/15 match (App.tsx ↔ features.md)
-### API docs: 62/63 — `POST /api/auth/setup-admin` undocumented
+- Pages: 15/15 match (App.tsx = features.md)
+- API docs: Complete — 70+ endpoints, no gaps
 
 ---
 
 ## 3. Test Coverage Audit
 
-**Verdict: 197 E2E + 24 backend = 221 tests**
+**Verdict: 203 E2E + 38 backend = 241 tests**
 
 | Rule | Score | Detail |
 |------|-------|--------|
-| R1: Outcome vs status | LOW | 26/85 status checks fire-and-forget |
-| R2: Form fill+submit | LOW | 2/12 form pages have fill tests |
-| R3: Mutation verify-after | LOW | 32 POST/PUT without GET verify |
-| R5: Encryption checks | LOW | 4 tests (only in debug-change-password) |
-| R6: Fresh state | LOW | 2 calls total |
-| R7: Error path ratio | GOOD | 46% touch error paths |
-
-### Key Gap
-Backend unit tests: 24 tests for 17 controllers and 15+ services. No tests for core services (Holdings, Stocks, Transactions, Dashboard, Portfolio).
+| R1: Outcome vs status | **LOW** | 39/50 status checks lack data assertions (78%) |
+| R2: Form fill+submit | **LOW** | 5/12 form pages covered, 7 untested |
+| R3: Mutation verify-after | **MEDIUM** | 11/25 mutations unverified (44%) — improved from 65% |
+| R5: Encryption/payload | **LOW** | 0 bulk payload tests in main suites |
+| R6: Fresh state | **LOW** | 2 calls total (only debug-change-password) |
+| R7: Error path ratio | **GOOD** | 95 error refs across 203 tests (47%) |
 
 ---
 
 ## 4. App Critique
 
-**Score: 88/100** (up from 83)
+**Score: 87/100**
 
-| Category | Score | Notes |
-|----------|-------|-------|
-| Feature Completeness | 14/15 | 15 pages, 17 controllers, 12+ domains |
-| Security | 13/15 | JWT+RSA+BCrypt+RBAC+OTP. No global rate limiting on login. |
-| Code Quality | 12/12 | Zero @Autowired, Flyway, no console.log |
-| Testing | 10/15 | 221 tests but thin backend unit coverage |
-| Documentation | 10/10 | 12 doc files, thorough |
-| UI/UX | 9/13 | SoloSprint branding, code splitting, dark mode (just added). No mobile-optimized nav. |
-| DevOps | 12/12 | GitHub Actions CI, Render, scripts |
-| Data Integrity | 8/8 | CNC/MIS, P&L formulas documented |
+| Category | Max | Score | Notes |
+|----------|-----|-------|-------|
+| Feature Completeness | 15 | 14 | 15 pages, 17 controllers, 11+ domains |
+| Security | 15 | 14 | JWT+RSA+BCrypt+RBAC+OTP+rate limiting (email+IP) |
+| Code Quality | 12 | 11 | Zero @Autowired, Flyway, code splitting (React.lazy) |
+| Testing | 15 | 11 | 241 tests but thin backend unit coverage |
+| Documentation | 10 | 10 | 12 doc files, thorough CLAUDE.md |
+| UI/UX | 13 | 11 | Dark mode, BottomNav, SoloSprint branding, sortable tables |
+| DevOps | 12 | 9 | GitHub Actions CI, Render, scripts. No Docker. |
+| Data Integrity | 8 | 7 | P&L formulas, CNC/MIS, Flyway validate |
 
 ### Top 3 Strengths
 1. Feature depth — 15 pages, full trading lifecycle + AI + broker sync
 2. Security posture — RSA+BCrypt+JWT+OTP+RBAC+rate limiting
-3. CI/CD maturity — 3-stage pipeline with Playwright + PostgreSQL
+3. Documentation — 12 docs, detailed CLAUDE.md, session continuity
 
 ### Top 3 Gaps
-1. Backend unit test coverage thin (24 tests for 15+ services)
-2. No global rate limiting on login/registration
-3. Connection pool leak from scheduled jobs (CRITICAL BUG)
+1. Backend unit tests thin (38 for 17 controllers)
+2. No Docker/containerization
+3. R1/R2/R5/R6 test quality rules still LOW
 
 ---
 
@@ -90,30 +98,30 @@ Backend unit tests: 24 tests for 17 controllers and 15+ services. No tests for c
 
 | File | Status | Gap |
 |------|--------|-----|
-| CLAUDE.md | STALE | GROWW_API_ENABLED default wrong (false vs true); UI test count says 28, actual 63 |
+| CLAUDE.md | STALE | E2E count 197→203, suites 7→6, no backend tests mentioned |
 | features.md | CURRENT | All 15 pages match |
-| api-reference.md | CURRENT (minor) | Missing POST /api/auth/setup-admin |
-| HANDOFF.md | STALE | Date Jun 23; ui-rendering count 56 vs 63 |
+| api-reference.md | CURRENT | setup-admin documented |
+| HANDOFF.md | STALE | Date Jun 23, test counts wrong, missing Jun 27 work |
 | BUGS.md | CURRENT | 0 open |
 | ENHANCEMENTS.md | CURRENT | 0 open |
-| PENDING-WORK.md | STALE | Date Jun 23; items not refreshed |
-| TEST-COVERAGE-AUDIT.md | STALE | Says 190, actual 197 |
-| SKILL-AUDIT-RESULTS.md | Updated now | This file |
+| PENDING-WORK.md | STALE | Test count 237→241, item #9 already done |
+| TEST-COVERAGE-AUDIT.md | STALE | Count 190→241 |
+| SKILL-AUDIT-RESULTS.md | CURRENT | This file |
 
 ---
 
-## Action Items (Combined)
+## Action Items
 
 | # | Priority | Source | Item |
 |---|----------|--------|------|
-| 1 | **CRITICAL** | Functionality | Fix connection pool leak in TechnicalAnalysisServiceImpl |
-| 2 | High | Test Audit | Add backend unit tests for core services |
-| 3 | High | Test Audit | R1/R2/R3: Strengthen 50+ shallow E2E tests |
-| 4 | Medium | Doc Audit | Fix CLAUDE.md: GROWW default, test counts |
-| 5 | Medium | Doc Audit | Update 5 stale doc files |
-| 6 | Medium | App Critique | Add global rate limiting on login/register |
-| 7 | Low | Project Review | Move test credentials to env vars |
-| 8 | Low | App Critique | Mobile-optimized navigation |
+| 1 | High | Project Review | Add rate limiting to /verify-otp, /forgot-password, /verify-security, /reset-password |
+| 2 | High | Project Review | Restrict /setup-admin (first-run only or remove) |
+| 3 | High | Test Audit | R1: Add data assertions to 39 status-only tests |
+| 4 | High | Test Audit | R2: Add form fill tests for 7 untested pages |
+| 5 | Medium | Doc Audit | Fix test counts in CLAUDE.md, HANDOFF.md, PENDING-WORK.md, TEST-COVERAGE-AUDIT.md |
+| 6 | Medium | App Critique | Add Docker/containerization |
+| 7 | Low | Test Audit | R5/R6: Add payload tests and session cleanup |
+| 8 | Low | App Critique | More backend unit tests for remaining services |
 
 ## Score History
 
@@ -123,3 +131,4 @@ Backend unit tests: 24 tests for 17 controllers and 15+ services. No tests for c
 | Jun 23 (v1) | 0C/2W | 12/12 OK | 190 tests, R3 LOW | 83/100 | 5 stale |
 | Jun 23 (v2) | 0C/0W | 12/12 OK | 197 tests, R3 LOW | 88/100 | 5 stale |
 | Jun 27 (v3) | 0C/1W | BUG FOUND | 221 tests, R1-R6 LOW | 88/100 | 6 stale |
+| Jun 27 (v4) | 0C/2W | 12/12 OK | 241 tests, R3 MEDIUM | 87/100 | 4 stale |
