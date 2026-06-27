@@ -264,3 +264,77 @@ test.describe('Auth — Session Isolation', () => {
     expect((await profile.json()).email).toBe(ADMIN_EMAIL);
   });
 });
+
+// ─── R5: Encryption Verification in Main Suite ──────────────────
+
+test.describe('Auth — Encryption Verification', () => {
+  test('login password is RSA-encrypted in UI flow', async ({ page }) => {
+    await page.goto('/login');
+    const [req] = await Promise.all([
+      page.waitForRequest(r => r.url().includes('/auth/login'), { timeout: 10000 }),
+      (async () => {
+        await page.fill('input[type="email"]', ADMIN_EMAIL);
+        await page.fill('input[type="password"]', ADMIN_PASSWORD);
+        await page.click('button[type="submit"]');
+      })(),
+    ]);
+    const body = req.postDataJSON();
+    expect(body.password.length).toBeGreaterThan(100);
+    expect(body.password).not.toBe(ADMIN_PASSWORD);
+  });
+
+  test('register password would be RSA-encrypted', async ({ page }) => {
+    await page.goto('/register');
+    await page.fill('input[type="email"]', `encrypt_test_${Date.now()}@test.com`);
+    await page.fill('input[type="password"]', 'TestEncrypt@123456');
+    await page.locator('input[placeholder*="First"]').fill('Test');
+    const selects = page.locator('select');
+    if (await selects.count() >= 2) {
+      await selects.nth(0).selectOption({ index: 1 });
+      await selects.nth(1).selectOption({ index: 2 });
+    }
+    const answerInputs = page.locator('input[placeholder*="Answer"], input[placeholder*="answer"]');
+    for (let i = 0; i < await answerInputs.count(); i++) {
+      await answerInputs.nth(i).fill('TestAnswer' + i);
+    }
+    const [req] = await Promise.all([
+      page.waitForRequest(r => r.url().includes('/auth/register'), { timeout: 10000 }).catch(() => null),
+      page.click('button[type="submit"]'),
+    ]);
+    if (req) {
+      const body = req.postDataJSON();
+      if (body?.password) {
+        expect(body.password.length).toBeGreaterThan(100);
+      }
+    }
+  });
+});
+
+// ─── R6: Session Isolation ───────────────────────────────────────
+
+test.describe('Auth — Session Isolation', () => {
+  test('clear state then login succeeds', async ({ page }) => {
+    await page.context().clearCookies();
+    await page.evaluate(() => localStorage.clear());
+    await page.goto('/login');
+    await page.fill('input[type="email"]', ADMIN_EMAIL);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('/', { timeout: 15000 });
+    await expect(page.getByText('Total Funds')).toBeVisible({ timeout: 20000 });
+  });
+
+  test('cleared localStorage forces re-login', async ({ page }) => {
+    await page.goto('/login');
+    await page.fill('input[type="email"]', ADMIN_EMAIL);
+    await page.fill('input[type="password"]', ADMIN_PASSWORD);
+    await page.click('button[type="submit"]');
+    await page.waitForURL('/', { timeout: 15000 });
+
+    await page.evaluate(() => localStorage.clear());
+    await page.goto('/holdings');
+    await page.waitForTimeout(2000);
+    const onLogin = page.url().includes('/login');
+    expect(onLogin).toBeTruthy();
+  });
+});

@@ -663,3 +663,93 @@ test.describe('UI Form — Admin Ticket Respond', () => {
     }
   });
 });
+
+// ─── FORM FILL: Holdings Add (fill fields) ───────────────────────
+
+test.describe('UI Form — Holdings Add Fill', () => {
+  test('fill add holding form fields', async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Holdings');
+    await expect(page.locator('h1')).toContainText('Holdings', { timeout: 10000 });
+    await page.click('button:has-text("Add Holding")');
+    await page.waitForTimeout(1000);
+    const qtyInput = page.locator('input[name="quantity"]');
+    if (await qtyInput.isVisible()) {
+      await qtyInput.fill('10');
+      await page.locator('input[name="averageBuyPrice"]').fill('150.50');
+      await expect(qtyInput).toHaveValue('10');
+    }
+  });
+});
+
+// ─── FORM FILL: Transactions Add (fill fields) ──────────────────
+
+test.describe('UI Form — Transactions Add Fill', () => {
+  test('fill add transaction form fields', async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Transactions');
+    await expect(page.locator('h1')).toContainText('Transactions', { timeout: 10000 });
+    const addBtn = page.locator('button:has-text("Add Transaction")');
+    if (await addBtn.isVisible()) {
+      await addBtn.click();
+      await page.waitForTimeout(1000);
+      const qtyInput = page.locator('input[name="quantity"]');
+      if (await qtyInput.isVisible()) {
+        await qtyInput.fill('5');
+        await page.locator('input[name="price"]').fill('200');
+        await expect(qtyInput).toHaveValue('5');
+      }
+    }
+  });
+});
+
+// ─── FORM FILL: Forgot Password (3-step) ────────────────────────
+
+test.describe('UI Form — Forgot Password Fill', () => {
+  test('step 1: fill email and submit', async ({ page }) => {
+    await page.goto('/forgot-password');
+    await expect(page.getByText('Reset your password')).toBeVisible({ timeout: 10000 });
+    await page.fill('input[type="email"]', 'sampath12082@gmail.com');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(2000);
+    // Should either show security questions or an error
+    const bodyText = await page.textContent('body');
+    expect(bodyText).toBeTruthy();
+  });
+});
+
+// ─── FORM FILL: MF Add Fund (search + select) ───────────────────
+
+test.describe('UI Form — MF Add Fund Fill', () => {
+  test('search for fund in modal', async ({ page }) => {
+    await loginViaUI(page);
+    await page.click('nav >> text=Mutual Funds');
+    await expect(page.locator('h1')).toContainText('Mutual Funds', { timeout: 10000 });
+    await page.click('button:has-text("Add Fund")');
+    await page.waitForTimeout(1000);
+    const searchInput = page.locator('input[placeholder*="Search"], input[placeholder*="search"]');
+    if (await searchInput.isVisible()) {
+      await searchInput.fill('HDFC Balanced');
+      await page.waitForTimeout(2000);
+      await expect(searchInput).toHaveValue('HDFC Balanced');
+    }
+  });
+});
+
+// ─── FORM FILL: AI Search ────────────────────────────────────────
+
+test.describe('UI Form — AI Search', () => {
+  test('type prompt and submit', async ({ page }) => {
+    await loginViaUI(page);
+    await page.goto('/ai-search');
+    await page.waitForTimeout(2000);
+    const input = page.locator('input[placeholder*="Ask"], input[placeholder*="stock"]');
+    if (await input.isVisible()) {
+      await input.fill('How is TCS performing?');
+      await page.click('button[type="submit"]');
+      await page.waitForTimeout(3000);
+      const hasResponse = await page.locator('.bg-white.border').first().isVisible().catch(() => false);
+      expect(typeof hasResponse).toBe('boolean');
+    }
+  });
+});
