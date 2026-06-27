@@ -72,24 +72,32 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public Map<String, String> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+    public Map<String, String> verifyOtp(@Valid @RequestBody VerifyOtpRequest request, jakarta.servlet.http.HttpServletRequest httpReq) {
+        if (!rateLimiter.isAllowed("otp:" + request.email(), 5, 300000))
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many OTP attempts. Try again in 5 minutes.");
         authService.verifyOtp(request);
         return Map.of("message", "Email verified successfully");
     }
 
     @PostMapping("/forgot-password")
-    public Map<String, String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+    public Map<String, String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, jakarta.servlet.http.HttpServletRequest httpReq) {
+        if (!rateLimiter.isAllowed("forgot:" + httpReq.getRemoteAddr(), 3, 600000))
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many password reset requests. Try again in 10 minutes.");
         return authServiceImpl.getSecurityQuestions(request.email());
     }
 
     @PostMapping("/verify-security")
-    public Map<String, String> verifySecurity(@RequestBody Map<String, String> body) {
+    public Map<String, String> verifySecurity(@RequestBody Map<String, String> body, jakarta.servlet.http.HttpServletRequest httpReq) {
+        if (!rateLimiter.isAllowed("security:" + body.get("email"), 3, 300000))
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many security answer attempts. Try again in 5 minutes.");
         authServiceImpl.verifySecurityAnswers(body.get("email"), body.get("answer1"), body.get("answer2"));
         return Map.of("message", "Security answers verified. OTP sent to your email.");
     }
 
     @PostMapping("/reset-password")
-    public Map<String, String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    public Map<String, String> resetPassword(@Valid @RequestBody ResetPasswordRequest request, jakarta.servlet.http.HttpServletRequest httpReq) {
+        if (!rateLimiter.isAllowed("reset:" + httpReq.getRemoteAddr(), 3, 600000))
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many password reset attempts. Try again in 10 minutes.");
         authService.resetPassword(request);
         return Map.of("message", "Password reset successfully");
     }
@@ -108,7 +116,11 @@ public class AuthController {
 
     @PostMapping("/setup-admin")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, String> setupAdmin(@RequestBody Map<String, String> body) {
+    public Map<String, String> setupAdmin(@RequestBody Map<String, String> body, jakarta.servlet.http.HttpServletRequest httpReq) {
+        if (!rateLimiter.isAllowed("setup:" + httpReq.getRemoteAddr(), 3, 600000)) {
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many setup attempts. Try again in 10 minutes.");
+        }
+
         String email = body.get("email");
         String password = body.get("password");
         String firstName = body.getOrDefault("firstName", "Admin");
@@ -117,6 +129,9 @@ public class AuthController {
         if (email == null || email.isBlank() || password == null || password.isBlank()) {
             return Map.of("message", "email and password are required");
         }
+
+        long adminCount = userRepository.findAll().stream()
+                .filter(u -> "ROLE_ADMIN".equals(u.getRole())).count();
 
         var existing = userRepository.findByEmail(email);
         if (existing.isPresent()) {
@@ -129,6 +144,10 @@ public class AuthController {
                 return Map.of("message", "Admin password reset for: " + email);
             }
             return Map.of("message", "Admin user already exists. Pass resetPassword=true to reset.");
+        }
+
+        if (adminCount > 0) {
+            return Map.of("message", "An admin already exists. New admin creation is disabled.");
         }
 
         User admin = new User();

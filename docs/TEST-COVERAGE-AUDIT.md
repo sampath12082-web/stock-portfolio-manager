@@ -1,12 +1,12 @@
 # Test Coverage Audit Report
 
-## Latest Audit: 2026-06-23 (Quality Rules Applied)
+## Latest Audit: 2026-06-27 (Quality Rules Applied)
 
 ## Summary
 
 | Metric | Count |
 |--------|-------|
-| Total tests | 190 |
+| Total tests | 250 |
 | Form fill interactions | 23 |
 | Network intercepts | 5 |
 | Cross-page E2E flows | 5 |
