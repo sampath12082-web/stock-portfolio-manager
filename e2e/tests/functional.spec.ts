@@ -648,7 +648,7 @@ test.describe('Functional — Health', () => {
 test.describe('Critical — Setup-Admin API', () => {
   test('setup-admin creates or acknowledges existing admin', async ({ request }) => {
     const resp = await request.post('/api/auth/setup-admin', {
-      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*', firstName: 'Sampat Kumar' },
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD, firstName: 'E2E' },
     });
     expect(resp.status()).toBe(201);
     const body = await resp.json();
@@ -657,7 +657,7 @@ test.describe('Critical — Setup-Admin API', () => {
 
   test('setup-admin is idempotent — no duplicate', async ({ request }) => {
     const resp = await request.post('/api/auth/setup-admin', {
-      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*' },
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
     expect(resp.status()).toBe(201);
     const body = await resp.json();
@@ -666,13 +666,13 @@ test.describe('Critical — Setup-Admin API', () => {
 
   test('setup-admin can reset password with flag', async ({ request }) => {
     const resp = await request.post('/api/auth/setup-admin', {
-      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*', resetPassword: 'true' },
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD, resetPassword: 'true' },
     });
     const body = await resp.json();
     expect(body.message).toContain('reset');
 
     const login = await request.post('/api/auth/login', {
-      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*' },
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
     expect(login.status()).toBe(200);
   });

@@ -25,13 +25,13 @@ cd frontend && npm run build
 # Frontend — lint
 cd frontend && npm run lint
 
-# E2E tests — 203 E2E + 47 backend = 250 tests across 6 suites (requires backend running on port 8081)
+# E2E tests — 216 E2E + 55 backend = 271 tests across 6 suites (requires backend running on port 8081)
 cd e2e && npm test                    # All tests
 cd e2e && npm run test:smoke          # Smoke tests (10)
-cd e2e && npm run test:auth           # Auth tests (20)
+cd e2e && npm run test:auth           # Auth tests (33)
 cd e2e && npm run test:functional     # Functional tests (78)
 cd e2e && npm run test:regression     # Regression tests (22)
-cd e2e && npm run test:ui             # UI rendering tests (63)
+cd e2e && npm run test:ui             # UI rendering tests (69)
 cd e2e && npm run test:headed         # Run with browser visible
 cd e2e && npx playwright test tests/smoke.spec.ts --grep "test name"  # single test
 

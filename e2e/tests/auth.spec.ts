@@ -210,6 +210,49 @@ test.describe('Auth — Change Password', () => {
     });
     expect(resp.status()).toBe(200);
   });
+
+  test('change password rejects missing current password', async ({ request }) => {
+    const login = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    const { accessToken } = await login.json();
+    const resp = await request.post('/api/auth/change-password', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { newPassword: 'ValidNewPass@12345' },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('change password rejects missing new password', async ({ request }) => {
+    const login = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    const { accessToken } = await login.json();
+    const resp = await request.post('/api/auth/change-password', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { currentPassword: ADMIN_PASSWORD },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('change password rejects no special char in new password', async ({ request }) => {
+    const login = await request.post('/api/auth/login', {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    const { accessToken } = await login.json();
+    const resp = await request.post('/api/auth/change-password', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      data: { currentPassword: ADMIN_PASSWORD, newPassword: 'NoSpecialChar12345' },
+    });
+    expect(resp.status()).toBe(400);
+  });
+
+  test('change password without auth returns 401', async ({ request }) => {
+    const resp = await request.post('/api/auth/change-password', {
+      data: { currentPassword: 'anything', newPassword: 'anything' },
+    });
+    expect(resp.status()).toBe(401);
+  });
 });
 
 test.describe('Auth — RSA Encryption Verification', () => {

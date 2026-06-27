@@ -105,12 +105,16 @@ public class AuthController {
     @PostMapping("/change-password")
     public Map<String, String> changePassword(Principal principal,
             @Valid @RequestBody ChangePasswordRequest request) {
+        if (!rateLimiter.isAllowed("changepw:" + principal.getName(), 3, 300000))
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many password change attempts. Try again in 5 minutes.");
         authService.changePassword(principal.getName(), request);
         return Map.of("message", "Password changed successfully");
     }
 
     @PostMapping("/refresh")
-    public AuthResponse refreshToken(@RequestBody Map<String, String> body) {
+    public AuthResponse refreshToken(@RequestBody Map<String, String> body, jakarta.servlet.http.HttpServletRequest httpReq) {
+        if (!rateLimiter.isAllowed("refresh:" + httpReq.getRemoteAddr(), 10, 60000))
+            throw new com.stocks.myportfolio.common.exception.ValidationException("Too many refresh attempts. Try again in 1 minute.");
         return authService.refreshToken(body.get("refreshToken"));
     }
 
@@ -130,24 +134,12 @@ public class AuthController {
             return Map.of("message", "email and password are required");
         }
 
-        long adminCount = userRepository.findAll().stream()
-                .filter(u -> "ROLE_ADMIN".equals(u.getRole())).count();
-
-        var existing = userRepository.findByEmail(email);
-        if (existing.isPresent()) {
-            boolean resetPassword = "true".equalsIgnoreCase(body.get("resetPassword"));
-            if (resetPassword) {
-                User admin = existing.get();
-                admin.setPasswordHash(passwordEncoder.encode(password));
-                admin.setEmailVerified(true);
-                userRepository.save(admin);
-                return Map.of("message", "Admin password reset for: " + email);
-            }
-            return Map.of("message", "Admin user already exists. Pass resetPassword=true to reset.");
+        if (userRepository.countByRole("ROLE_ADMIN") > 0) {
+            return Map.of("message", "Admin already exists. Use forgot-password to reset credentials.");
         }
 
-        if (adminCount > 0) {
-            return Map.of("message", "An admin already exists. New admin creation is disabled.");
+        if (userRepository.findByEmail(email).isPresent()) {
+            return Map.of("message", "User with this email already exists.");
         }
 
         User admin = new User();

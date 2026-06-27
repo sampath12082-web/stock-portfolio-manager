@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const EMAIL = 'sampath12082@gmail.com';
-const OLD_PASSWORD = 'Admin@1234567890*';
+import { TEST_EMAIL as EMAIL, TEST_PASSWORD } from './helpers';
+const OLD_PASSWORD = TEST_PASSWORD;
 const NEW_PASSWORD = 'Changed@123456789';
 
 test.describe('E2E — Change Password Full Flow', () => {

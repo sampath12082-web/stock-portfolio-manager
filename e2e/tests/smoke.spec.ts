@@ -1,3 +1,4 @@
+import { TEST_EMAIL, TEST_PASSWORD } from "./helpers";
 import { test, expect } from '@playwright/test';
 import { getAdminToken, authHeaders } from './helpers';
 
@@ -10,7 +11,7 @@ test.describe('Smoke Tests — App loads and API health', () => {
 
   test('auth endpoint is accessible (login returns 200)', async ({ request }) => {
     const resp = await request.post('/api/auth/login', {
-      data: { email: 'sampath12082@gmail.com', password: 'Admin@1234567890*' },
+      data: { email: TEST_EMAIL, password: TEST_PASSWORD },
     });
     expect(resp.status()).toBe(200);
   });
